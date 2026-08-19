@@ -6,15 +6,15 @@ int i =0;
 
 do {
 	system("cls");
-		std::cout<<"\n        		 << MINI GIT >>\n";
-		std::cout<<"		<<1. Inicializar repositorio.>>\n";
-		std::cout<<"		<<2. Ver informacion del repositorio>>\n";
-		std::cout<<	"		<< 3.Simular Cambios.>>\n";
-		std::cout<<"		<<4. Crear Commit>>\n";
-		std::cout<<"		<<5. Ver Ultimo Commit>>\n";
-		std::cout<<"		<<6. Ver estado del repositorio>>\n";
-		std::cout<<"		<<7. Reiniciar repositorio>>\n";
-		std::cout<<"		<<8 .salir>>\n";
+		std::cout<<"\n        				 << MINI GIT >>\n";
+		std::cout<<"					<<1. Inicializar repositorio.>>\n";
+		std::cout<<"					<<2. Ver informacion del repositorio>>\n";
+		std::cout<<	"					<< 3.Simular Cambios.>>\n";
+		std::cout<<"					<<4. Crear Commit>>\n";
+		std::cout<<"					<<5. Ver Ultimo Commit>>\n";
+		std::cout<<"					<<6. Ver estado del repositorio>>\n";
+		std::cout<<"					<<7. Reiniciar repositorio>>\n";
+		std::cout<<"					<<8 .salir>>\n";
 		std::cin>> i;
 		
 		switch(i){
@@ -62,11 +62,9 @@ do {
 			default:
 				std::cout<<"opcion no valida ingrese otra: ";
 				break;
-			
 		}
 
 	}
 	while (i!=8);
 		return 0;
 }
-
