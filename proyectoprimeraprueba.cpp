@@ -62,7 +62,7 @@ do {
 			default:
 				std::cout<<"opcion no valida ingrese otra: ";
 				break;
-				system("cls");
+			
 		}
 
 	}
