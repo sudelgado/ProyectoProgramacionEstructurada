@@ -1,7 +1,9 @@
 #include <iostream>
+#include <string>
 int main(){
 
 int i=0;
+std::string nombrerepositorio, autor;
 
 
 do {
@@ -22,6 +24,17 @@ do {
 			case 1:
 				system("cls");
 				std::cout<<"Opcion digitada: 1...\nEntrando a: Inicializando Repositorio\n";
+				std::cin.ignore()
+				std::cout<<"Digite el nombre del repositorio:      \n";
+				std::getline(cin, nombrerepositorio);
+
+				std::cout<<"Digite el nombre del autor:      \n";
+				std::getline(cin,autor);
+
+				while (nombrerepositorio= "") {
+				cout<< "El nombre del reposotorio no puede estar vacío. Digitelo nuevamnete:      ";
+				std::getline(cin, nombre repositorio." }
+				
 				
 				break;
 				system("cls");
