@@ -67,7 +67,12 @@ do {
 			case 2:
 			    system("cls");
 				std::cout<<"Opcion digitada: 2...\nEntrando a: Informacion del Repositorio\n";
-					
+				if (!repositorioCreado==true){
+						
+						std::cout<<"No se a creado ningun repositorio\n";
+						std::cout<<"\n";
+						system("pause");
+					}
 				break;
 				system("cls");
 			case 3:
