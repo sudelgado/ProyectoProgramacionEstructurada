@@ -4,7 +4,7 @@ int main(){
 
 int i=0;
 std::string nombrerepositorio, autor;
-
+bool repositorioCreado = false;
 
 do {
 	system("cls");
@@ -22,39 +22,48 @@ do {
 		switch(i){
 			
 			case 1:
-			system("cls");
+	
+{
+    		system("cls");
 
-				std::cout << "Opcion digitada: 1...\n";
-				std::cout << "Entrando a: Inicializando Repositorio\n";
-
-				std::cin.ignore();
-
-				std::cout << "Digite el nombre del repositorio: ";
-				std::getline(std::cin, nombrerepositorio);
-
-				std::cout << "Digite el nombre del autor: ";
-				std::getline(std::cin, autor);							
-
-			while (nombrerepositorio == "" || autor == "")
-			{
-    		if (nombrerepositorio == "")
-    		{
-        		std::cout << "El nombre del repositorio no puede estar vacio. "
-                	  << "Digite nuevamente: ";
-      		  std::getline(std::cin, nombrerepositorio);
-    		}
-
-    		if (autor == "")
-    			{
-        		std::cout << "El nombre del autor no puede estar vacio. "
-                  << "Digite nuevamente: ";
-        		std::getline(std::cin, autor);
+    		if (repositorioCreado==true)  {
+        	std::cout << "ADVERTENCIA: Ya existe un repositorio activo.\n";
+        	std::cout << "No se puede crear otro repositorio.\n";
+        	system("pause");
+        	break;
     }
-}
-				
-				
-				break;
-				system("cls");
+
+    		std::cout << "Opcion digitada: 1...\n";
+    		std::cout << "Entrando a: Inicializando Repositorio\n\n";
+
+    		std::cin.ignore();
+
+    		std::cout << "Digite el nombre del repositorio: ";
+    		std::getline(std::cin, nombrerepositorio);
+
+    	while (nombrerepositorio == "")
+    {
+        		std::cout << "El nombre del repositorio no puede estar vacio. "
+                  << "Digite nuevamente: ";
+        		std::getline(std::cin, nombrerepositorio);
+    }
+
+    		std::cout << "Digite el nombre del autor: ";
+    		std::getline(std::cin, autor);
+
+    	while (autor == "")
+    {
+        	std::cout << "El nombre del autor no puede estar vacio. "
+                  << "Digite nuevamente: ";
+        	std::getline(std::cin, autor);
+    }
+
+			    repositorioCreado = true;
+
+ 			   std::cout << "\nRepositorio creado correctamente.\n";
+
+    		system("pause");
+   			 break;
 			case 2:
 			    system("cls");
 				std::cout<<"Opcion digitada: 2...\nEntrando a: Informacion del Repositorio\n";
@@ -103,6 +112,10 @@ do {
 		}
 
 	}
-	while (i!=8);
+}	while (i!=8);
+	
+	
+
 		return 0;
+
 }
