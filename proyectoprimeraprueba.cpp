@@ -22,18 +22,35 @@ do {
 		switch(i){
 			
 			case 1:
-				system("cls");
-				std::cout<<"Opcion digitada: 1...\nEntrando a: Inicializando Repositorio\n";
-				std::cin.ignore()
-				std::cout<<"Digite el nombre del repositorio:      \n";
-				std::getline(cin, nombrerepositorio);
+			system("cls");
 
-				std::cout<<"Digite el nombre del autor:      \n";
-				std::getline(cin,autor);
+				std::cout << "Opcion digitada: 1...\n";
+				std::cout << "Entrando a: Inicializando Repositorio\n";
 
-				while (nombrerepositorio= "") {
-				cout<< "El nombre del reposotorio no puede estar vacío. Digitelo nuevamnete:      ";
-				std::getline(cin, nombre repositorio." }
+				std::cin.ignore();
+
+				std::cout << "Digite el nombre del repositorio: ";
+				std::getline(std::cin, nombrerepositorio);
+
+				std::cout << "Digite el nombre del autor: ";
+				std::getline(std::cin, autor);							
+
+			while (nombrerepositorio == "" || autor == "")
+			{
+    		if (nombrerepositorio == "")
+    		{
+        		std::cout << "El nombre del repositorio no puede estar vacio. "
+                	  << "Digite nuevamente: ";
+      		  std::getline(std::cin, nombrerepositorio);
+    		}
+
+    		if (autor == "")
+    			{
+        		std::cout << "El nombre del autor no puede estar vacio. "
+                  << "Digite nuevamente: ";
+        		std::getline(std::cin, autor);
+    }
+}
 				
 				
 				break;
