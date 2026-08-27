@@ -1,10 +1,11 @@
 #include <iostream>
 #include <string>
+#include <iomanip>
 int main(){
 
-int i=0;
+int i=0, cantidadCommits=0;
 std::string nombrerepositorio, autor;
-bool repositorioCreado = false;
+bool repositorioCreado = false, cambiosPendientes= false;
 
 do {
 	system("cls");
@@ -76,13 +77,24 @@ if (std::cin.fail()) {
    
 			case 2:
 			    system("cls");
-				std::cout<<"Opcion digitada: 2...\nEntrando a: Informacion del Repositorio\n";
-				if (!repositorioCreado==true){
+				std::cout<<"Opcion digitada: 2...\nEntrando a: Informacion del Repositorio\n\n";
+				if (!repositorioCreado){ //quite el ==true porque es redundante 
 						
-						std::cout<<"No se a creado ningun repositorio\n";
+						std::cout<<"No se ha creado ningun repositorio...\n";
 						std::cout<<"\n";
 						system("pause");
 					}
+				else {
+					std::cout << "					Repositorio: " << nombrerepositorio << "\n";
+					std::cout << "					Autor del repositorio: " << autor << "\n";
+					std::cout << "					Estado: Inicializado\n"; //revisar como seria en caso de que no este inicializado ya que no use variable
+					std::cout << "					Cantidad de commits: " << cantidadCommits << "\n";
+					std::cout << "					Ultimo commit: #" << cantidadCommits << "\n";
+					std::cout << "					Cambios pendientes: " << (cambiosPendientes ? "Si": "No") << "\n";
+				}
+				
+					system("pause");
+				
 				break;
 				system("cls");
 			case 3:
