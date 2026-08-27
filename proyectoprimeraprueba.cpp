@@ -19,11 +19,20 @@ do {
 		std::cout<<"					<<8. Salir>>\n";
 		std::cin>> i;
 		
+if (std::cin.fail()) {
+    std::cin.clear();
+    std::cin.ignore(1000, '\n');
+
+    std::cout << "Opcion no valida. Debe ingresar un numero.\n";
+    system("pause");
+    continue;
+}
+		
 		switch(i){
 			
 			case 1:
 	
-{
+   {
     		system("cls");
 
     		if (repositorioCreado==true)  {
@@ -64,6 +73,7 @@ do {
 
     		system("pause");
    			 break;
+   
 			case 2:
 			    system("cls");
 				std::cout<<"Opcion digitada: 2...\nEntrando a: Informacion del Repositorio\n";
@@ -107,12 +117,13 @@ do {
 				system("cls");
 			case 8:
 				system("cls");
-			std::cout<<"Saliendo....";
+			    std::cout<<"Saliendo....";
 			
 			break;
 				
 			default:
-				std::cout<<"Opcion no valida. Ingrese otra: ";
+				std::cout<<"Opcion no valida. Digite una opcion del MENU.\n";
+				system("pause");
 				break;
 		}
 
