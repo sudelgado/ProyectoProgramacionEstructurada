@@ -266,11 +266,36 @@ if (std::cin.fail()) {
 				break;
 
 			case 6:
-				system("cls");
-			    std::cout<<"Opcion digitada: 6...\nEntrando a: Estado del Repositorio\n";
-				
-				break;
-				system("cls");
+				 system("cls");
+
+    std::cout << "Opcion digitada: 6...\n";
+    std::cout << "Entrando a: Estado del Repositorio\n\n";
+
+    if (!repositorioCreado) {
+        std::cout << "No se ha creado ningun repositorio.\n";
+    }
+    else {
+
+        std::cout << "Repositorio: " << nombreRepositorio << "\n";
+
+        if (cambiosPendientes) {
+            std::cout << "Estado: Inicializado | Cambios pendientes\n";
+        }
+        else {
+            std::cout << "Estado: Inicializado | Sin cambios pendientes\n";
+        }
+
+        if (cantidadCommits == 0) {
+            std::cout << "Ultimo commit: Ninguno\n";
+        }
+        else {
+            std::cout << "Ultimo commit: #" << cantidadCommits << "\n";
+        }
+    }
+
+   		 system("pause");
+   			 break;
+    	system("cls");
 			case 7:
 				system("cls");
 			    std::cout<<"Opcion digitada: 7...\nEntrando a: Reiniciar Repositorio\n";
