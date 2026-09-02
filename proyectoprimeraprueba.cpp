@@ -277,8 +277,8 @@ if (std::cin.fail()) {
     else {
 
         std::cout<<"Repositorio: "<<nombreRepositorio<<"\n";
-
-        if (cambiosPendientes) {
+//== para que no parezca "IA" geniesasa
+        if (cambiosPendientes==true) {
             std::cout<<"Estado: Inicializado | Cambios pendientes\n";
         }
         else {
