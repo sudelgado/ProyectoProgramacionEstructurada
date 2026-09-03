@@ -293,14 +293,12 @@ if (std::cin.fail()) {
     else {
 
         std::cout<<"Repositorio: "<<nombreRepositorio<<"\n";
-//== para que no parezca "IA" geniesasa
         if (cambiosPendientes==true) {
             std::cout<<"Estado: Inicializado | Cambios pendientes\n";
         }
         else {
             std::cout<<"Estado: Inicializado | Sin cambios pendientes\n";
         }
-
         if (cantidadCommits == 0) {
             std::cout<<"Ultimo commit: Ninguno\n";
         }
@@ -308,7 +306,6 @@ if (std::cin.fail()) {
             std::cout<<"Ultimo commit: #"<<cantidadCommits<<"\n";
         }
     }
-
    	system("pause");
    	break;
     system("cls");
