@@ -160,7 +160,15 @@ if (std::cin.fail()) {
                     system("cls");
                     std::cout <<"Opcion digitada: 2\nEntrando a: Modificar Archivo\n\n";
                     std::cout<<"Nombre del archivo: ";
-                    std::cin>>nombreArchivo3;
+                    std::cin.ignore();
+                    std::getline(std::cin, nombreArchivo3);
+                    
+                    while (nombreArchivo3 == ""){
+			        system("cls");
+			        std::cout << "El nombre del archivo no puede estar vacio.\nDigitelo nuevamente: ";
+			        std::getline(std::cin, nombreArchivo3);
+			    }
+			    
                     cambiosPendientes=true;
                     std::cout<<"El archivo fue modificado correctamente.\n\n";
                     system("pause");
@@ -171,7 +179,15 @@ if (std::cin.fail()) {
                     system("cls");
                     std::cout <<"Opcion digitada: 3\nEntrando a: Eliminar Archivo\n\n";
                     std::cout<<"Nombre del archivo: ";
-                    std::cin>>nombreArchivo3;
+                    std::cin.ignore();
+                    std::getline(std::cin, nombreArchivo3);
+                    
+                    while (nombreArchivo3 == ""){
+			        system("cls");
+			        std::cout << "El nombre del archivo no puede estar vacio.\nDigitelo nuevamente: ";
+			        std::getline(std::cin, nombreArchivo3);
+                }
+                    
                     if (totalArchivos3 > 0){
                     	totalArchivos3--;
                     	cambiosPendientes=true;
@@ -293,9 +309,9 @@ if (std::cin.fail()) {
         }
     }
 
-   		 											system("pause");
-   			 														break;
-    																							system("cls");
+   	system("pause");
+   	break;
+    system("cls");
 			case 7:
 				system("cls");
 			    std::cout<<"Opcion digitada: 7...\nEntrando a: Reiniciar Repositorio\n";
@@ -320,6 +336,6 @@ if (std::cin.fail()) {
 
 		return 0;
 		
-		//agregue la variable estado para cuando mas adelante se necesite revisar si hay cambios pendientes en el repo, entonces es bueno trabajarla por aparte para no usarla como string si no se cambie sola por el estado de la variable
+	
 
 }
