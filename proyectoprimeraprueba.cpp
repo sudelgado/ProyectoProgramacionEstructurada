@@ -3,9 +3,10 @@
 #include <iomanip>
 int main(){
 
-int i=0, cantidadCommits=0, opcioncase3=0, totalArchivos3=0;
+int i=0, cantidadCommits=0, opcioncase3=0, totalArchivos3=0, confirmacion=0;
 std::string nombreRepositorio, autor, estado, nombreArchivo3, mensajeCommit, ultimoMensajeCommit;
 bool repositorioCreado = false, cambiosPendientes= false;
+
 
 do {
 	system("cls");
@@ -310,11 +311,58 @@ if (std::cin.fail()) {
    	break;
     system("cls");
 			case 7:
-				system("cls");
-			    std::cout<<"Opcion digitada: 7...\nEntrando a: Reiniciar Repositorio\n";
-				
-				break;
-				system("cls");
+					 {
+                system("cls");
+                std::cout<<"Opcion digitada: 7...\nEntrando a: Reiniciar Repositorio\n";
+
+            
+                if (!repositorioCreado && cantidadCommits == 0 && totalArchivos3 == 0 && !cambiosPendientes) {
+                    std::cout << "No hay nada que eliminar. No existe informacion almacenada.\n\n";
+                    system("pause");
+                    break;
+                }
+
+
+                std::cout<<"ADVERTENCIA: Esta accion borrara toda la informacion registrada.\n";
+                std::cout<<"Desea eliminar toda la informacion?\n";
+                std::cout<<"1. Si\n";
+                std::cout<<"2. No\n";
+                std::cout<<"Seleccione una opcion: ";
+                std::cin>>confirmacion;
+
+				//me averigue y con esto se hace para que ya a la hora de digitar otra opcion que no sea  1 o 2 no salga y se siga repitiendo el mensaje hasta que se ponga un valor valido
+                while (std::cin.fail() || (confirmacion != 1 && confirmacion != 2)) {
+                    std::cin.clear();
+                    std::cin.ignore(1000, '\n');
+                    
+                    system("cls");
+                    std::cout<<"Opcion no valida. Solo puede digitar 1 o 2.\n\n";
+                    std::cout<<"Desea eliminar toda la informacion?\n";
+                    std::cout<<"1. Si\n";
+                    std::cout<<"2. No\n";
+                    std::cout<<"Seleccione una opcion: ";
+                    std::cin>>confirmacion;
+                }
+
+                if (confirmacion==1) {
+                    nombreRepositorio="";
+                    autor="";
+                    estado="";
+                    nombreArchivo3="";
+                    mensajeCommit="";
+                    ultimoMensajeCommit="";
+                    cantidadCommits=0;
+                    totalArchivos3=0;
+                    repositorioCreado=false;
+                    cambiosPendientes=false;
+                    std::cout<<"El repositorio ha sido reiniciado con exito. Toda la informacion fue eliminada.\n";
+                } else{
+                    std::cout<<"Operacion cancelada. Se conservan los datos del repositorio.\n";
+                }
+
+                system("pause");
+                break;
+            }
 			case 8:
 				system("cls");
 			    std::cout<<"Saliendo....";
