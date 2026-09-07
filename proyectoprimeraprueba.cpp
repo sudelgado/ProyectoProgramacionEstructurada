@@ -136,7 +136,7 @@ do {
 					system("pause");
 				
 				break;
-				system("cls");
+				
 		
 		case 3:
 	system("cls");
@@ -302,7 +302,7 @@ do {
     }
    	system("pause");
    	break;
-    system("cls");
+
 			case 7:
 					 {
                 system("cls");
