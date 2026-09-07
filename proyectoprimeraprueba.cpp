@@ -1,37 +1,68 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
-int main(){
 
-int i=0, cantidadCommits=0, opcioncase3=0, totalArchivos3=0, confirmacion=0;
+void mostrarMenuPrincipal (){
+	std::cout<<"\n        				 << MINI GIT >>\n";
+	std::cout<<"					<<1. Inicializar Repositorio>>\n";
+	std::cout<<"					<<2. Ver Informacion del Repositorio>>\n";
+	std::cout<<"					<<3. Simular Cambios>>\n";
+	std::cout<<"					<<4. Crear Commit>>\n";
+	std::cout<<"					<<5. Ver Ultimo Commit>>\n";
+	std::cout<<"					<<6. Ver Estado del Repositorio>>\n";
+	std::cout<<"					<<7. Reiniciar Repositorio>>\n";
+	std::cout<<"					<<8. Salir>>\n";	
+}
+
+void mostrarSubmenuCambios(){
+		std::cout<<"        << Seleccione una de las siguientes opciones: >>\n\n";
+        std::cout<<"          1. Agregar Archivo\n";
+        std::cout<<"          2. Modificar Archivo\n";
+        std::cout<<"          3. Eliminar Archivo\n";
+        std::cout<<"          4. Cancelar\n";	
+}
+
+std::string leerNombreArchivo (){
+	std::string nombre;
+	std::cout<<"Nombre del archivo: ";
+	std::cin.ignore();
+	std::getline(std::cin, nombre);
+	
+	while (nombre == ""){
+		system("cls");
+		std::cout << "El nombre del archivo no puede estar vacio.\nDigitelo nuevamente: ";
+		std::getline(std::cin, nombre);
+	} return nombre;
+}
+
+int leerNumeroValidado(int minvalido, int maxvalido){
+	int valor;
+	std::cin>>valor;
+	
+	while (std::cin.fail() || valor < minvalido || valor > maxvalido) {
+		std::cin.clear();
+		std::cin.ignore(1000,'\n');
+		system("cls");
+		std::cout<<"Opcion no valida. Debe ingresar un numero.\n";
+		std::cout<<"Seleccione una opcion: ";
+		std::cin>>valor;
+	}
+	return valor;
+}
+
+int main(){
+	
+int opcion=0, cantidadCommits=0, opcioncase3=0, totalArchivos3=0, confirmacion=0;
 std::string nombreRepositorio, autor, estado, nombreArchivo3, mensajeCommit, ultimoMensajeCommit;
 bool repositorioCreado = false, cambiosPendientes= false;
 
 
 do {
 	system("cls");
-		std::cout<<"\n        				 << MINI GIT >>\n";
-		std::cout<<"					<<1. Inicializar Repositorio>>\n";
-		std::cout<<"					<<2. Ver Informacion del Repositorio>>\n";
-		std::cout<<"					<<3. Simular Cambios>>\n";
-		std::cout<<"					<<4. Crear Commit>>\n";
-		std::cout<<"					<<5. Ver Ultimo Commit>>\n";
-		std::cout<<"					<<6. Ver Estado del Repositorio>>\n";
-		std::cout<<"					<<7. Reiniciar Repositorio>>\n";
-		std::cout<<"					<<8. Salir>>\n";
-		std::cin>> i;
+	mostrarMenuPrincipal();	
+	opcion=leerNumeroValidado(1,8);
 	
-		
-if (std::cin.fail()) {
-    std::cin.clear();
-    std::cin.ignore(1000, '\n');
-
-    std::cout << "Opcion no valida. Debe ingresar un numero.\n";
-    system("pause");
-    continue;
-}
-		
-		switch(i){
+		switch(opcion){
 			
 			case 1:
 	
@@ -44,7 +75,6 @@ if (std::cin.fail()) {
         	system("pause");
         	break;
     }
-
     		std::cout<<"Opcion digitada: 1\nEntrando a: Inicializando Repositorio\n\n";
 
     		std::cin.ignore();
@@ -80,7 +110,7 @@ if (std::cin.fail()) {
 			case 2:
 			    system("cls");
 				std::cout<<"Opcion digitada: 2...\nEntrando a: Informacion del Repositorio\n\n";
-				if (!repositorioCreado){ //quite el ==true porque es redundante 
+				if (!repositorioCreado){ 
 						
 						std::cout<<"No se ha creado ningun repositorio...\n";
 						std::cout<<"\n";
@@ -88,13 +118,18 @@ if (std::cin.fail()) {
 					}
 				else {
 					estado = "Inicializado";
-					estado += (cambiosPendientes) ? " | Cambios pendientes" : " | Sin cambios pendientes"; // aqui cambia el valor de estado dependiendo del valor de cambios pendientes
+					
 					
 					std::cout << "					Repositorio: " << nombreRepositorio << "\n";
 					std::cout << "					Autor del repositorio: " << autor << "\n";
-					std::cout << "					Estado: " << estado << "\n"; //revisar como seria en caso de que no este inicializado ya que no use variable
+					std::cout << "					Estado: " << estado << "\n";
+					if (cantidadCommits == 0) {
+            			std::cout<<"					Ultimo commit: Ninguno\n";
+        			}
+        			else {
+         				std::cout<<"					Ultimo commit: #"<<cantidadCommits<<"\n";
+       				} 
 					std::cout << "					Cantidad de commits: " << cantidadCommits << "\n";
-					std::cout << "					Ultimo commit: #" << cantidadCommits << "\n";
 					std::cout << "					Cambios pendientes: " << (cambiosPendientes ? "Si": "No") << "\n";
 				}
 				
@@ -115,39 +150,15 @@ if (std::cin.fail()) {
 	}
 
     do {
-        std::cout<<"        << Seleccione una de las siguientes opciones: >>\n\n";
-        std::cout<<"          1. Agregar Archivo\n";
-        std::cout<<"          2. Modificar Archivo\n";
-        std::cout<<"          3. Eliminar Archivo\n";
-        std::cout<<"          4. Cancelar\n";
+    	mostrarSubmenuCambios();
 
-        std::cin >> opcioncase3;
-
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore(1000, '\n');
-            
- 			system("cls");
-            std::cout << "Opcion no valida. Debe ingresar un numero.\n\n";
-            system("pause");
-            system("cls");
-            opcioncase3 = 0;
-        }
-        else {
+        opcioncase3= leerNumeroValidado(1,4);
             switch (opcioncase3) {
 
                 case 1:
                     system("cls");
                     std::cout<<"Opcion digitada: 1\nEntrando a: Agregar archivo\n\n";
-                    std::cout<<"Nombre del archivo: ";
-                    std::cin.ignore();
-                    std::getline(std::cin, nombreArchivo3);
-                    
-                    while (nombreArchivo3 == ""){
-			        system("cls");
-			        std::cout << "El nombre del archivo no puede estar vacio.\nDigitelo nuevamente: ";
-			        std::getline(std::cin, nombreArchivo3);
-			        }
+                    nombreArchivo3=leerNombreArchivo();
                     
                     totalArchivos3++;
                     cambiosPendientes=true;
@@ -160,15 +171,7 @@ if (std::cin.fail()) {
                 case 2:
                     system("cls");
                     std::cout <<"Opcion digitada: 2\nEntrando a: Modificar Archivo\n\n";
-                    std::cout<<"Nombre del archivo: ";
-                    std::cin.ignore();
-                    std::getline(std::cin, nombreArchivo3);
-                    
-                    while (nombreArchivo3 == ""){
-			        system("cls");
-			        std::cout << "El nombre del archivo no puede estar vacio.\nDigitelo nuevamente: ";
-			        std::getline(std::cin, nombreArchivo3);
-			    }
+                    nombreArchivo3=leerNombreArchivo();
 			    
                     cambiosPendientes=true;
                     std::cout<<"El archivo fue modificado correctamente.\n\n";
@@ -179,23 +182,15 @@ if (std::cin.fail()) {
                 case 3:
                     system("cls");
                     std::cout <<"Opcion digitada: 3\nEntrando a: Eliminar Archivo\n\n";
-                    std::cout<<"Nombre del archivo: ";
-                    std::cin.ignore();
-                    std::getline(std::cin, nombreArchivo3);
-                    
-                    while (nombreArchivo3 == ""){
-			        system("cls");
-			        std::cout << "El nombre del archivo no puede estar vacio.\nDigitelo nuevamente: ";
-			        std::getline(std::cin, nombreArchivo3);
-                }
+                    nombreArchivo3=leerNombreArchivo();
                     
                     if (totalArchivos3 > 0){
                     	totalArchivos3--;
-                    	cambiosPendientes=true;
                     	std::cout<<"El archivo: "<<nombreArchivo3<<" ha sido eliminado correctamente.\n\n";
                     	} else {
                     		std::cout<<"El archivo: "<<nombreArchivo3<<" no existe.\n\n";
 						}
+					cambiosPendientes=true;
                     system("pause");
                     system("cls");
                     break;
@@ -214,8 +209,6 @@ if (std::cin.fail()) {
                     system("cls");
                     break;
             }
-        }
-
     } while (opcioncase3!=4);
 
     break;
@@ -328,21 +321,7 @@ if (std::cin.fail()) {
                 std::cout<<"1. Si\n";
                 std::cout<<"2. No\n";
                 std::cout<<"Seleccione una opcion: ";
-                std::cin>>confirmacion;
-
-				//me averigue y con esto se hace para que ya a la hora de digitar otra opcion que no sea  1 o 2 no salga y se siga repitiendo el mensaje hasta que se ponga un valor valido
-                while (std::cin.fail() || (confirmacion != 1 && confirmacion != 2)) {
-                    std::cin.clear();
-                    std::cin.ignore(1000, '\n');
-                    
-                    system("cls");
-                    std::cout<<"Opcion no valida. Solo puede digitar 1 o 2.\n\n";
-                    std::cout<<"Desea eliminar toda la informacion?\n";
-                    std::cout<<"1. Si\n";
-                    std::cout<<"2. No\n";
-                    std::cout<<"Seleccione una opcion: ";
-                    std::cin>>confirmacion;
-                }
+               confirmacion=leerNumeroValidado(1,2);
 
                 if (confirmacion==1) {
                     nombreRepositorio="";
@@ -375,7 +354,7 @@ if (std::cin.fail()) {
 				break;
 		}
 
-	} while (i!=8);
+	} while (opcion!=8);
 	
 	
 
