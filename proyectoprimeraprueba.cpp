@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <stdexcept>
 
 void mostrarMenuPrincipal (){
 	std::cout<<"\n        				 << MINI GIT >>\n";
@@ -11,7 +12,8 @@ void mostrarMenuPrincipal (){
 	std::cout<<"					<<5. Ver Ultimo Commit>>\n";
 	std::cout<<"					<<6. Ver Estado del Repositorio>>\n";
 	std::cout<<"					<<7. Reiniciar Repositorio>>\n";
-	std::cout<<"					<<8. Salir>>\n";	
+	std::cout<<"					<<8. Salir>>\n";
+	std::cout<<"					Seleccione una opcion: ";	
 }
 
 void mostrarSubmenuCambios(){
@@ -19,36 +21,74 @@ void mostrarSubmenuCambios(){
         std::cout<<"          1. Agregar Archivo\n";
         std::cout<<"          2. Modificar Archivo\n";
         std::cout<<"          3. Eliminar Archivo\n";
-        std::cout<<"          4. Cancelar\n";	
+        std::cout<<"          4. Cancelar\n";
+		std::cout<<"		Seleccione una opcion: ";	
+}
+
+
+bool soloEspacios(const std::string& texto){
+	int largo = texto.length();
+	for (int i = 0; i < largo; i = i + 1){
+		if (texto[i] != ' ' && texto[i] != '\t'){
+			return false;   
+		}
+	}
+	return true;            
 }
 
 std::string leerNombreArchivo (){
 	std::string nombre;
-	std::cout<<"Nombre del archivo: ";
-	std::cin.ignore();
+std::cout<<"Nombre del archivo: ";
 	std::getline(std::cin, nombre);
-	
-	while (nombre == ""){
-		system("cls");
-		std::cout << "El nombre del archivo no puede estar vacio.\nDigitelo nuevamente: ";
+
+	while (soloEspacios(nombre)){
+		std::cout << "El nombre del archivo no puede estar vacio ni tener solo espacios.\nDigitelo nuevamente: ";
 		std::getline(std::cin, nombre);
-	} return nombre;
+	}
+	return nombre;
+}
+
+bool todosDigitos(const std::string& texto){
+	int largo = texto.length();
+	if (largo == 0){
+		return false;
+	}
+	for (int i = 0; i < largo; i = i + 1){
+		if (texto[i] < '0' || texto[i] > '9'){
+			return false;
+		}
+	}
+	return true;
 }
 
 int leerNumeroValidado(int minvalido, int maxvalido){
-	int valor;
-	std::cin>>valor;
-	
-	while (std::cin.fail() || valor < minvalido || valor > maxvalido) {
-		std::cin.clear();
-		std::cin.ignore(1000,'\n');
-		system("cls");
-		std::cout<<"Opcion no valida. Debe ingresar un numero.\n";
-		std::cout<<"Seleccione una opcion: ";
-		std::cin>>valor;
+	std::string texto;
+	int valor = 0;
+	bool valido = false;
+
+	while (!valido){
+		std::getline(std::cin, texto);
+
+		if (todosDigitos(texto)){
+			try{
+				valor = std::stoi(texto);
+				if (valor >= minvalido && valor <= maxvalido){
+					valido = true;
+				}
+			}
+			catch (const std::exception&){
+				valido = false;
+			}
+		}
+
+		if (!valido){
+			std::cout<<"Opcion no valida. Escriba solo un numero entre "<<minvalido<<" y "<<maxvalido<<" (sin espacios ni letras).\n";
+			std::cout<<"Seleccione una opcion: ";
+		}
 	}
 	return valor;
 }
+
 
 int main(){
 	
@@ -77,28 +117,24 @@ do {
     }
     		std::cout<<"Opcion digitada: 1\nEntrando a: Inicializando Repositorio\n\n";
 
-    		std::cin.ignore();
+
 
     		std::cout<<"Digite el nombre del repositorio: ";
     		std::getline(std::cin, nombreRepositorio);
 
-    	while (nombreRepositorio=="")
-    {
-    	        system("cls");
-        		std::cout<<"El nombre del repositorio no puede estar vacio.\nDigitelo nuevamente: ";
-        		std::getline(std::cin, nombreRepositorio);
-    }
+    	while (soloEspacios(nombreRepositorio)){
+					std::cout<<"El nombre del repositorio no puede estar vacio ni tener solo espacios.\nDigitelo nuevamente: ";
+					std::getline(std::cin, nombreRepositorio);
+				}
 
     		std::cout<<"\nDigite el nombre del autor: ";
     		std::getline(std::cin, autor);
 
-    	while (autor=="")
-    {
-    		system("cls");
-    		std::cout<<"Nombre del repositorio: "<<nombreRepositorio;
-        	std::cout<<"\n\nEl nombre del autor no puede estar vacio.\nDigitelo nuevamente: ";
-        	std::getline(std::cin, autor);
-    }
+    	while (soloEspacios(autor)){
+					std::cout<<"El nombre del autor no puede estar vacio ni tener solo espacios.\nDigitelo nuevamente: ";
+					std::getline(std::cin, autor);
+				}
+
 
 			    repositorioCreado = true;
 
@@ -114,7 +150,7 @@ do {
 						
 						std::cout<<"No se ha creado ningun repositorio...\n";
 						std::cout<<"\n";
-						system("pause");
+
 					}
 				else {
 					estado = "Inicializado";
@@ -230,22 +266,18 @@ do {
 				break;
 				}
 				
-				std::cin.ignore();
 				
 				std::cout<<"Ingrese el mensaje del commit: ";
 				std::getline(std::cin, mensajeCommit);
 				
-				while (mensajeCommit=="" || mensajeCommit.length()<10 || mensajeCommit.length()>60){
-					system("cls");
-					std::cout<<"Mensaje del commit con error(es): "<<mensajeCommit;
-					
-					if (mensajeCommit==""){
-						std::cout<<"\n\nEl mensaje del commit NO puede estar vacio. Digitelo nuevamente: ";
-					}else{
-						std::cout<<"\n\nEl mensaje del commit debe tener entre 10 y 60 caracteres. Digitelo nuevamente: ";
-					} 
-					std::getline(std::cin, mensajeCommit);
-				}
+			while (soloEspacios(mensajeCommit) || mensajeCommit.length()<10 || mensajeCommit.length()>60){
+	if (soloEspacios(mensajeCommit)){
+		std::cout<<"\nEl mensaje del commit no puede estar vacio ni tener solo espacios. Digitelo nuevamente: ";
+	}else{
+		std::cout<<"\nEl mensaje del commit debe tener entre 10 y 60 caracteres. Digitelo nuevamente: ";
+	}
+	std::getline(std::cin, mensajeCommit);
+}
 				
 				cantidadCommits++;
 				ultimoMensajeCommit=mensajeCommit;
