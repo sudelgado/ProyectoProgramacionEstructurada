@@ -3,6 +3,13 @@
 #include <iomanip>
 #include <stdexcept>
 
+const int MAX_REPOSITORIOS=10;
+const int MAX_COMMITS=50; // NECESARIO REVISAR SI SON 5O PORQUE ES UN PICHAZO
+const int MAX_CAMBIOS=20;
+const int MAX_LONGITUDNOMBRE=30;
+const int MIN_LONGITUDMENSAJE=10;
+const int MAX_LONGITUDMENSAJE=60;
+
 void mostrarMenuPrincipal (){
 	std::cout<<"\n        				 << MINI GIT >>\n";
 	std::cout<<"					<<1. Inicializar Repositorio>>\n";
@@ -270,7 +277,7 @@ do {
 				std::cout<<"Ingrese el mensaje del commit: ";
 				std::getline(std::cin, mensajeCommit);
 				
-			while (soloEspacios(mensajeCommit) || mensajeCommit.length()<10 || mensajeCommit.length()>60){
+			while (soloEspacios(mensajeCommit) || mensajeCommit.length()< MIN_LONGITUDMENSAJE|| mensajeCommit.length()> MAX_LONGITUDMENSAJE){
 	if (soloEspacios(mensajeCommit)){
 		std::cout<<"\nEl mensaje del commit no puede estar vacio ni tener solo espacios. Digitelo nuevamente: ";
 	}else{
