@@ -4,23 +4,37 @@
 #include <stdexcept>
 
 const int MAX_REPOSITORIOS=10;
-const int MAX_COMMITS=50; // NECESARIO REVISAR SI SON 5O PORQUE ES UN PICHAZO
+const int MAX_COMMITS=50; 
 const int MAX_CAMBIOS=20;
 const int MAX_LONGITUDNOMBRE=30;
 const int MIN_LONGITUDMENSAJE=10;
 const int MAX_LONGITUDMENSAJE=60;
 
-void mostrarMenuPrincipal (){
+void mostrarMenuPrincipal (std::string nombreRepositorio[], int repositorioActivo){
 	std::cout<<"\n        				 << MINI GIT >>\n";
-	std::cout<<"					<<1. Inicializar Repositorio>>\n";
-	std::cout<<"					<<2. Ver Informacion del Repositorio>>\n";
-	std::cout<<"					<<3. Simular Cambios>>\n";
-	std::cout<<"					<<4. Crear Commit>>\n";
-	std::cout<<"					<<5. Ver Ultimo Commit>>\n";
-	std::cout<<"					<<6. Ver Estado del Repositorio>>\n";
-	std::cout<<"					<<7. Reiniciar Repositorio>>\n";
-	std::cout<<"					<<8. Salir>>\n";
+	if (repositorioActivo== -1){
+	std::cout << "					<<Repositorio activo: Niguno>>\n\n";
+	}
+	else{
+	std::cout << "					<<Repositorio activo: " << nombreRepositorio[repositorioActivo] << ">>\n\n";
+	}
+	
+	std::cout<<"					<<1. Crear Repositorio>>\n";
+	std::cout<<"					<<2. Listar repositorios>>\n";
+	std::cout<<"					<<3. Seleccionar repositorio activo>>\n";
+	std::cout<<"					<<4. Ver información del repositorio activo>>\n";
+	std::cout<<"					<<5. Simular cambios>>\n";
+	std::cout<<"					<<6. Ver cambios pendientes>>\n";
+	std::cout<<"					<<7. Crear commit>>\n";
+	std::cout<<"					<<8. Ver ultimo commit>>\n";
+	std::cout<<"					<<9. Ver historial de commits>>\n";
+	std::cout<<"					<<10. Ver estado general y estadisticas>>\n";
+	std::cout<<"					<11. Eliminar repositorio>>\n";
+	std::cout<<"					<<12. Guardar datos >>\n";
+	std::cout<<"					<<13. Ver bitacora>>\n";
+	std::cout<<"					<<14. Salir>>\n\n";
 	std::cout<<"					Seleccione una opcion: ";	
+	
 }
 
 void mostrarSubmenuCambios(){
@@ -99,303 +113,137 @@ int leerNumeroValidado(int minvalido, int maxvalido){
 
 int main(){
 	
-int opcion=0, cantidadCommits=0, opcioncase3=0, totalArchivos3=0, confirmacion=0;
-std::string nombreRepositorio, autor, estado, nombreArchivo3, mensajeCommit, ultimoMensajeCommit;
-bool repositorioCreado = false, cambiosPendientes= false;
 
+int cantidadCommits[MAX_REPOSITORIOS];
+int cantidadCambiosPendientes[MAX_REPOSITORIOS];
+std::string nombreRepositorio[MAX_REPOSITORIOS];
+std::string autorRepositorio[MAX_REPOSITORIOS];
+
+std::string mensajesCommits[MAX_REPOSITORIOS][MAX_COMMITS];
+std::string archivosCambios[MAX_REPOSITORIOS][MAX_CAMBIOS];
+char tipoCambioPendiente[MAX_REPOSITORIOS][MAX_CAMBIOS];
+
+int cantidadRepositorios=0;
+int repositorioActivo=-1;
+int opcion=0;
+
+for (int i=0; i < MAX_REPOSITORIOS; i=i+1){ // los arreglos de enteros empiezan con basuras, hay que ponerlos en 0... algo asi
+	cantidadCommits[i]=0;
+	cantidadCambiosPendientes[i]=0;
+}
 
 do {
 	system("cls");
-	mostrarMenuPrincipal();	
-	opcion=leerNumeroValidado(1,8);
+	mostrarMenuPrincipal(nombreRepositorio, repositorioActivo);	
+	opcion=leerNumeroValidado(1,14);
+	
+	if (opcion >= 4 && opcion <= 9 && repositorioActivo == -1){ // del case 4 al 9 necesita un repo activo
+			std::cout<<"\nDebe seleccionar un repositorio activo antes de realizar esta operacion.\n";
+			system("pause");
+			continue;
+		}
 	
 		switch(opcion){
 			
 			case 1:
-	
-   {
-    		system("cls");
-
-    		if (repositorioCreado==true)  {
-        	std::cout<<"ADVERTENCIA: Ya existe un repositorio activo.\n";
-        	std::cout<<"No se puede crear otro repositorio.\n\n";
-        	system("pause");
-        	break;
-    }
-    		std::cout<<"Opcion digitada: 1\nEntrando a: Inicializando Repositorio\n\n";
-
-
-
-    		std::cout<<"Digite el nombre del repositorio: ";
-    		std::getline(std::cin, nombreRepositorio);
-
-    	while (soloEspacios(nombreRepositorio)){
-					std::cout<<"El nombre del repositorio no puede estar vacio ni tener solo espacios.\nDigitelo nuevamente: ";
-					std::getline(std::cin, nombreRepositorio);
-				}
-
-    		std::cout<<"\nDigite el nombre del autor: ";
-    		std::getline(std::cin, autor);
-
-    	while (soloEspacios(autor)){
-					std::cout<<"El nombre del autor no puede estar vacio ni tener solo espacios.\nDigitelo nuevamente: ";
-					std::getline(std::cin, autor);
-				}
-
-
-			    repositorioCreado = true;
-
- 			   std::cout << "\nRepositorio creado correctamente.\n";
-
-    		system("pause");
-   			 break;
-   		}
-			case 2:
-			    system("cls");
-				std::cout<<"Opcion digitada: 2...\nEntrando a: Informacion del Repositorio\n\n";
-				if (!repositorioCreado){ 
-						
-						std::cout<<"No se ha creado ningun repositorio...\n";
-						std::cout<<"\n";
-
-					}
-				else {
-					estado = "Inicializado";
-					
-					
-					std::cout << "					Repositorio: " << nombreRepositorio << "\n";
-					std::cout << "					Autor del repositorio: " << autor << "\n";
-					std::cout << "					Estado: " << estado << "\n";
-					if (cantidadCommits == 0) {
-            			std::cout<<"					Ultimo commit: Ninguno\n";
-        			}
-        			else {
-         				std::cout<<"					Ultimo commit: #"<<cantidadCommits<<"\n";
-       				} 
-					std::cout << "					Cantidad de commits: " << cantidadCommits << "\n";
-					std::cout << "					Cambios pendientes: " << (cambiosPendientes ? "Si": "No") << "\n";
-				}
-				
-					system("pause");
-				
+				system("cls");
+				std::cout<<"Opcion digitada: 1\nEntrando a: Crear repositorio\n\n";
+			
+				system("pause");
 				break;
-				
-		
-		case 3:
-	system("cls");
-	std::cout<<"Opcion digitada: 3...\nEntrando a: Simulador de Cambios\n\n";
+
+			case 2:
+				system("cls");
+				std::cout<<"Opcion digitada: 2\nEntrando a: Listar repositorios\n\n";
 	
-		if (!(repositorioCreado)){
-		std::cout<<"No existen registros de ningun repositorio.\n";
-		std::cout<<"Debe inicializar un repositorio antes de simular cambios.\n\n";
-		system("pause");
-		break;
-	}
+				system("pause");
+				break;
 
-    do {
-    	mostrarSubmenuCambios();
+			case 3:
+				system("cls");
+				std::cout<<"Opcion digitada: 3\nEntrando a: Seleccionar repositorio activo\n\n";
+				
+				system("pause");
+				break;
 
-        opcioncase3= leerNumeroValidado(1,4);
-            switch (opcioncase3) {
-
-                case 1:
-                    system("cls");
-                    std::cout<<"Opcion digitada: 1\nEntrando a: Agregar archivo\n\n";
-                    nombreArchivo3=leerNombreArchivo();
-                    
-                    totalArchivos3++;
-                    cambiosPendientes=true;
-                    system("cls");
-                    std::cout<<"El archivo fue agregado correctamente.\n\n";
-					system("pause");
-					system("cls");
-                    break;
-
-                case 2:
-                    system("cls");
-                    std::cout <<"Opcion digitada: 2\nEntrando a: Modificar Archivo\n\n";
-                    nombreArchivo3=leerNombreArchivo();
-			    
-                    cambiosPendientes=true;
-                    std::cout<<"El archivo fue modificado correctamente.\n\n";
-                    system("pause");
-                    system("cls");
-                    break;
-
-                case 3:
-                    system("cls");
-                    std::cout <<"Opcion digitada: 3\nEntrando a: Eliminar Archivo\n\n";
-                    nombreArchivo3=leerNombreArchivo();
-                    
-                    if (totalArchivos3 > 0){
-                    	totalArchivos3--;
-                    	std::cout<<"El archivo: "<<nombreArchivo3<<" ha sido eliminado correctamente.\n\n";
-                    	} else {
-                    		std::cout<<"El archivo: "<<nombreArchivo3<<" no existe.\n\n";
-						}
-					cambiosPendientes=true;
-                    system("pause");
-                    system("cls");
-                    break;
-
-                case 4:
-                    system("cls");
-                    std::cout <<"Opcion digitada: 4\nCancelando...\n\nRegresando al menu principal.\n\n";
-                    system("pause");
-                    system("cls");
-                    break;
-
-                default:
-                    system("cls");
-                    std::cout << "Opcion no valida. Digite una opcion del SUBMENU.\n\n";
-                    system("pause");
-                    system("cls");
-                    break;
-            }
-    } while (opcioncase3!=4);
-
-    break;
 			case 4:
 				system("cls");
-			    std::cout<<"Opcion digitada: 4\nEntrando a: Crear Commit\n\n";
-			    
-			    if (!(repositorioCreado)){
-			    	std::cout<<"Debe inicializar un repositorio para crear commits.\nRegresando al menu principal.\n\n";
-			    	system("pause");
-			    	system("cls");
-			    	break;
-				}
-				
-				if (!(cambiosPendientes)){
-					std::cout<<"No existen cambios para guardar.\nRegresando al menu principal.\n\n";
-				system("pause");
-				system("cls");	
-				break;
-				}
-				
-				
-				std::cout<<"Ingrese el mensaje del commit: ";
-				std::getline(std::cin, mensajeCommit);
-				
-			while (soloEspacios(mensajeCommit) || mensajeCommit.length()< MIN_LONGITUDMENSAJE|| mensajeCommit.length()> MAX_LONGITUDMENSAJE){
-	if (soloEspacios(mensajeCommit)){
-		std::cout<<"\nEl mensaje del commit no puede estar vacio ni tener solo espacios. Digitelo nuevamente: ";
-	}else{
-		std::cout<<"\nEl mensaje del commit debe tener entre 10 y 60 caracteres. Digitelo nuevamente: ";
-	}
-	std::getline(std::cin, mensajeCommit);
-}
-				
-				cantidadCommits++;
-				ultimoMensajeCommit=mensajeCommit;
-				cambiosPendientes=false;
-				
-				system("cls");
-				std::cout<<"Commit #"<<cantidadCommits<<" creado correctamente.\n\n";
-				std::cout<<"No existen cambios pendientes sin guardar.\n\n";
-				std::cout<<"Regresando al menu principal.\n\n";
+				std::cout<<"Opcion digitada: 4\nEntrando a: Ver informacion del repositorio activo\n\n";
+
 				system("pause");
 				break;
-				
+
 			case 5:
 				system("cls");
-			    std::cout<<"Opcion digitada: 5\nEntrando a: Ver el Ultimo Commit\n\n\n";
-			    
-			    if (cantidadCommits==0){
-			    	std::cout<<"Aun no existe ningun commit registrado.\n\n";
-				} else {
+				std::cout<<"Opcion digitada: 5\nEntrando a: Simular cambios\n\n";
 
-					std::cout<<"		Commit #"<<cantidadCommits;
-					std::cout<<"		\nRepositorio: "<<nombreRepositorio;
-					std::cout<<"		\nAutor: "<<autor;
-					std::cout<<"		\nMensaje: "<<ultimoMensajeCommit;
-					std::cout<<"		\nEstado: Guardado correctamente.\n\n\n";
-				}
 				system("pause");
 				break;
 
 			case 6:
-				 system("cls");
+				system("cls");
+				std::cout<<"Opcion digitada: 6\nEntrando a: Ver cambios pendientes\n\n";
 
-    std::cout<< "Opcion digitada: 6...\n";
-    std::cout<<"Entrando a: Estado del Repositorio\n\n";
-
-    if (!repositorioCreado) {
-        std::cout<< "No se ha creado ningun repositorio.\n";
-    }
-    else {
-
-        std::cout<<"Repositorio: "<<nombreRepositorio<<"\n";
-        if (cambiosPendientes==true) {
-            std::cout<<"Estado: Inicializado | Cambios pendientes\n";
-        }
-        else {
-            std::cout<<"Estado: Inicializado | Sin cambios pendientes\n";
-        }
-        if (cantidadCommits == 0) {
-            std::cout<<"Ultimo commit: Ninguno\n";
-        }
-        else {
-            std::cout<<"Ultimo commit: #"<<cantidadCommits<<"\n";
-        }
-    }
-   	system("pause");
-   	break;
+				system("pause");
+				break;
 
 			case 7:
-					 {
-                system("cls");
-                std::cout<<"Opcion digitada: 7...\nEntrando a: Reiniciar Repositorio\n";
+				system("cls");
+				std::cout<<"Opcion digitada: 7\nEntrando a: Crear commit\n\n";
 
-            
-                if (!repositorioCreado && cantidadCommits == 0 && totalArchivos3 == 0 && !cambiosPendientes) {
-                    std::cout << "No hay nada que eliminar. No existe informacion almacenada.\n\n";
-                    system("pause");
-                    break;
-                }
+				system("pause");
+				break;
 
-
-                std::cout<<"ADVERTENCIA: Esta accion borrara toda la informacion registrada.\n";
-                std::cout<<"Desea eliminar toda la informacion?\n";
-                std::cout<<"1. Si\n";
-                std::cout<<"2. No\n";
-                std::cout<<"Seleccione una opcion: ";
-               confirmacion=leerNumeroValidado(1,2);
-
-                if (confirmacion==1) {
-                    nombreRepositorio="";
-                    autor="";
-                    estado="";
-                    nombreArchivo3="";
-                    mensajeCommit="";
-                    ultimoMensajeCommit="";
-                    cantidadCommits=0;
-                    totalArchivos3=0;
-                    repositorioCreado=false;
-                    cambiosPendientes=false;
-                    std::cout<<"El repositorio ha sido reiniciado con exito. Toda la informacion fue eliminada.\n";
-                } else{
-                    std::cout<<"Operacion cancelada. Se conservan los datos del repositorio.\n";
-                }
-
-                system("pause");
-                break;
-            }
 			case 8:
 				system("cls");
-			    std::cout<<"Saliendo....";
-			
-			break;
-				
-			default:
-				std::cout<<"Opcion no valida. Digite una opcion del MENU.\n";
+				std::cout<<"Opcion digitada: 8\nEntrando a: Ver ultimo commit\n\n";
+
 				system("pause");
+				break;
+
+			case 9:
+				system("cls");
+				std::cout<<"Opcion digitada: 9\nEntrando a: Ver historial de commits\n\n";
+
+				system("pause");
+				break;
+
+			case 10:
+				system("cls");
+				std::cout<<"Opcion digitada: 10\nEntrando a: Ver estado general y estadisticas\n\n";
+
+				system("pause");
+				break;
+
+			case 11:
+				system("cls");
+				std::cout<<"Opcion digitada: 11\nEntrando a: Eliminar repositorio\n\n";
+
+				system("pause");
+				break;
+
+			case 12:
+				system("cls");
+				std::cout<<"Opcion digitada: 12\nEntrando a: Guardar datos\n\n";
+
+				system("pause");
+				break;
+
+			case 13:
+				system("cls");
+				std::cout<<"Opcion digitada: 13\nEntrando a: Ver bitacora\n\n";
+
+				system("pause");
+				break;
+
+			case 14:
+				system("cls");
+				std::cout<<"Saliendo....\n";
+
 				break;
 		}
 
-	} while (opcion!=8);
-	
-	
+	} while (opcion != 14);
 
 		return 0;
 		
