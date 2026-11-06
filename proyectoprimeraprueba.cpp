@@ -13,7 +13,7 @@ const int MAX_LONGITUDMENSAJE=60;
 void mostrarMenuPrincipal (std::string nombreRepositorio[], int repositorioActivo){
 	std::cout<<"\n        				 << MINI GIT >>\n";
 	if (repositorioActivo== -1){
-	std::cout << "					<<Repositorio activo: Niguno>>\n\n";
+	std::cout << "					<<Repositorio activo: Ninguno>>\n\n";
 	}
 	else{
 	std::cout << "					<<Repositorio activo: " << nombreRepositorio[repositorioActivo] << ">>\n\n";
@@ -22,14 +22,14 @@ void mostrarMenuPrincipal (std::string nombreRepositorio[], int repositorioActiv
 	std::cout<<"					<<1. Crear Repositorio>>\n";
 	std::cout<<"					<<2. Listar repositorios>>\n";
 	std::cout<<"					<<3. Seleccionar repositorio activo>>\n";
-	std::cout<<"					<<4. Ver información del repositorio activo>>\n";
+	std::cout<<"					<<4. Ver informacion del repositorio activo>>\n";
 	std::cout<<"					<<5. Simular cambios>>\n";
 	std::cout<<"					<<6. Ver cambios pendientes>>\n";
 	std::cout<<"					<<7. Crear commit>>\n";
 	std::cout<<"					<<8. Ver ultimo commit>>\n";
 	std::cout<<"					<<9. Ver historial de commits>>\n";
 	std::cout<<"					<<10. Ver estado general y estadisticas>>\n";
-	std::cout<<"					<11. Eliminar repositorio>>\n";
+	std::cout<<"					<<11. Eliminar repositorio>>\n";
 	std::cout<<"					<<12. Guardar datos >>\n";
 	std::cout<<"					<<13. Ver bitacora>>\n";
 	std::cout<<"					<<14. Salir>>\n\n";
@@ -57,16 +57,46 @@ bool soloEspacios(const std::string& texto){
 	return true;            
 }
 
-std::string leerNombreArchivo (){
-	std::string nombre;
-std::cout<<"Nombre del archivo: ";
-	std::getline(std::cin, nombre);
-
-	while (soloEspacios(nombre)){
-		std::cout << "El nombre del archivo no puede estar vacio ni tener solo espacios.\nDigitelo nuevamente: ";
-		std::getline(std::cin, nombre);
+// Devuelve true si el texto tiene al menos un ';'.
+// El ';' no se permite porque es el separador de los archivos CSV.
+bool contienePuntoYComa(const std::string& texto){
+	int largo = texto.length();
+	for (int i = 0; i < largo; i = i + 1){
+		if (texto[i] == ';'){
+			return true;
+		}
 	}
-	return nombre;
+	return false;
+}
+
+// Lee un texto y lo vuelve a pedir hasta que sea valido:
+//  - no puede estar vacio ni tener solo espacios
+//  - no puede contener ';'
+//  - su largo debe estar entre minLongitud y maxLongitud
+// Se usa para TODOS los textos: nombre del repositorio, autor, archivo y mensaje del commit.
+std::string leerTextoValido(const std::string& etiqueta, int minLongitud, int maxLongitud){         //QUITAR CONST Y AMPERSON!!
+	std::string texto;
+	bool valido = false;
+
+	while (!valido){
+		std::cout << etiqueta;
+		std::getline(std::cin, texto);
+		int largo = texto.length();
+
+		if (soloEspacios(texto)){
+			std::cout << "El texto no puede estar vacio ni tener solo espacios.\n";
+		}
+		else if (contienePuntoYComa(texto)){
+			std::cout << "El texto no puede contener el caracter ';'.\n";
+		}
+		else if (largo < minLongitud || largo > maxLongitud){
+			std::cout << "El texto debe tener entre " << minLongitud << " y " << maxLongitud << " caracteres.\n";
+		}
+		else {
+			valido = true;
+		}
+	}
+	return texto;
 }
 
 bool todosDigitos(const std::string& texto){
@@ -111,6 +141,51 @@ int leerNumeroValidado(int minvalido, int maxvalido){
 }
 
 
+// Busca un repositorio por su nombre recorriendo el arreglo.
+// Retorna la posicion donde esta, o -1 si no existe.
+int buscarRepositorio(const std::string nombreRepositorio[], int cantidadRepositorios, const std::string& nombreBuscado){
+	for (int i = 0; i < cantidadRepositorios; i = i + 1){
+		if (nombreRepositorio[i] == nombreBuscado){
+			return i;
+		}
+	}
+	return -1;
+}
+
+// Opcion 1: registra un repositorio nuevo en la primera posicion libre.
+// Valida la capacidad maxima y que no exista otro con el mismo nombre.
+// El repositorio nuevo queda como repositorio activo.
+void crearRepositorio(std::string nombreRepositorio[], std::string autorRepositorio[],
+                      int cantidadCommits[], int cantidadCambiosPendientes[],
+                      int& cantidadRepositorios, int& repositorioActivo){
+
+	if (cantidadRepositorios >= MAX_REPOSITORIOS){
+		std::cout << "Se alcanzo el maximo de " << MAX_REPOSITORIOS << " repositorios.\n\n";
+		return;
+	}
+
+	std::string nombre = leerTextoValido("Nombre del repositorio: ", 1, MAX_LONGITUDNOMBRE);
+
+	if (buscarRepositorio(nombreRepositorio, cantidadRepositorios, nombre) != -1){
+		std::cout << "\nYa existe un repositorio con el nombre " << nombre << ".\n\n";
+		return;
+	}
+
+	std::string autor = leerTextoValido("Nombre del autor: ", 1, MAX_LONGITUDNOMBRE);
+
+	// la primera posicion libre siempre es cantidadRepositorios (no hay huecos)
+	int posicion = cantidadRepositorios;
+	nombreRepositorio[posicion] = nombre;
+	autorRepositorio[posicion] = autor;
+	cantidadCommits[posicion] = 0;              // empieza sin commits
+	cantidadCambiosPendientes[posicion] = 0;    // y sin cambios pendientes
+
+	cantidadRepositorios = cantidadRepositorios + 1;
+	repositorioActivo = posicion;               // queda seleccionado
+
+	std::cout << "\nRepositorio " << nombre << " creado correctamente.\n\n";
+}
+
 int main(){
 	
 
@@ -148,7 +223,8 @@ do {
 			case 1:
 				system("cls");
 				std::cout<<"Opcion digitada: 1\nEntrando a: Crear repositorio\n\n";
-			
+				crearRepositorio(nombreRepositorio, autorRepositorio, cantidadCommits,
+				                 cantidadCambiosPendientes, cantidadRepositorios, repositorioActivo);
 				system("pause");
 				break;
 
