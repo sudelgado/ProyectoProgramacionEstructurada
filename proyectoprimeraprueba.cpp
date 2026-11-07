@@ -5,23 +5,26 @@
 #include <fstream>
 
 const int MAX_REPOSITORIOS=10;
-const int MAX_COMMITS=50; 
+const int MAX_COMMITS=50;
 const int MAX_CAMBIOS=20;
 const int MAX_LONGITUDNOMBRE=30;
 const int MIN_LONGITUDMENSAJE=10;
 const int MAX_LONGITUDMENSAJE=60;
 
 const std::string ARCHIVO_BITACORA = "bitacora.txt";
+const std::string ARCHIVO_REPOSITORIOS = "repositorios.csv";
+const std::string ARCHIVO_COMMITS = "commits.csv";
+const std::string ARCHIVO_CAMBIOS = "cambios.csv";
 
-void mostrarMenuPrincipal (const std::string nombreRepositorio[], int repositorioActivo){
+void mostrarMenuPrincipal(const std::string nombreRepositorio[], int repositorioActivo){
 	std::cout<<"\n        				 << MINI GIT >>\n";
-	if (repositorioActivo== -1){
-	std::cout << "					<<Repositorio activo: Ninguno>>\n\n";
+	if (repositorioActivo == -1){
+		std::cout << "					<<Repositorio activo: Ninguno>>\n\n";
 	}
 	else{
-	std::cout << "					<<Repositorio activo: " << nombreRepositorio[repositorioActivo] << ">>\n\n";
+		std::cout << "					<<Repositorio activo: " << nombreRepositorio[repositorioActivo] << ">>\n\n";
 	}
-	
+
 	std::cout<<"					<<1. Crear Repositorio>>\n";
 	std::cout<<"					<<2. Listar repositorios>>\n";
 	std::cout<<"					<<3. Seleccionar repositorio activo>>\n";
@@ -33,13 +36,11 @@ void mostrarMenuPrincipal (const std::string nombreRepositorio[], int repositori
 	std::cout<<"					<<9. Ver historial de commits>>\n";
 	std::cout<<"					<<10. Ver estado general y estadisticas>>\n";
 	std::cout<<"					<<11. Eliminar repositorio>>\n";
-	std::cout<<"					<<12. Guardar datos >>\n";
+	std::cout<<"					<<12. Guardar datos>>\n";
 	std::cout<<"					<<13. Ver bitacora>>\n";
 	std::cout<<"					<<14. Salir>>\n\n";
 }
 
-// Muestra las opciones del submenu de "Simular cambios".
-// La lectura de la opcion se hace con leerNumeroValidado.
 void mostrarSubmenuCambios(){
 	std::cout<<"        << Seleccione una de las siguientes opciones: >>\n\n";
 	std::cout<<"          1. Agregar Archivo\n";
@@ -48,19 +49,29 @@ void mostrarSubmenuCambios(){
 	std::cout<<"          4. Cancelar\n\n";
 }
 
+void registrarBitacora(const std::string& evento){
+	try{
+		std::ofstream archivo(ARCHIVO_BITACORA, std::ios::app);
+		if (!archivo.is_open()){
+			throw std::runtime_error("No se pudo abrir " + ARCHIVO_BITACORA);
+		}
+		archivo << evento << "\n";
+		archivo.close();
+	}
+	catch (const std::exception&){
+	}
+}
 
 bool soloEspacios(const std::string& texto){
 	int largo = texto.length();
 	for (int i = 0; i < largo; i = i + 1){
 		if (texto[i] != ' ' && texto[i] != '\t'){
-			return false;   
+			return false;
 		}
 	}
-	return true;            
+	return true;
 }
 
-// Devuelve true si el texto tiene al menos un ';'.
-// El ';' no se permite porque es el separador de los archivos CSV.
 bool contienePuntoYComa(const std::string& texto){
 	int largo = texto.length();
 	for (int i = 0; i < largo; i = i + 1){
@@ -71,11 +82,19 @@ bool contienePuntoYComa(const std::string& texto){
 	return false;
 }
 
-// Lee un texto y lo vuelve a pedir hasta que sea valido:
-//  - no puede estar vacio ni tener solo espacios
-//  - no puede contener ';'
-//  - su largo debe estar entre minLongitud y maxLongitud
-// Se usa para TODOS los textos: nombre del repositorio, autor, archivo y mensaje del commit.
+int largoSinEspaciosExtremos(const std::string& texto){
+	int inicio = 0;
+	int fin = texto.length() - 1;
+
+	while (inicio <= fin && (texto[inicio] == ' ' || texto[inicio] == '\t')){
+		inicio = inicio + 1;
+	}
+	while (fin >= inicio && (texto[fin] == ' ' || texto[fin] == '\t')){
+		fin = fin - 1;
+	}
+	return fin - inicio + 1;
+}
+
 std::string leerTextoValido(const std::string& etiqueta, int minLongitud, int maxLongitud){
 	std::string texto;
 	bool valido = false;
@@ -91,8 +110,12 @@ std::string leerTextoValido(const std::string& etiqueta, int minLongitud, int ma
 		else if (contienePuntoYComa(texto)){
 			std::cout << "El texto no puede contener el caracter ';'.\n";
 		}
-		else if (largo < minLongitud || largo > maxLongitud){
+		else if (largo > maxLongitud){
 			std::cout << "El texto debe tener entre " << minLongitud << " y " << maxLongitud << " caracteres.\n";
+		}
+		else if (largoSinEspaciosExtremos(texto) < minLongitud){
+			std::cout << "El texto debe tener entre " << minLongitud << " y " << maxLongitud
+			          << " caracteres (los espacios al inicio o al final no cuentan).\n";
 		}
 		else {
 			valido = true;
@@ -114,9 +137,6 @@ bool todosDigitos(const std::string& texto){
 	return true;
 }
 
-// Lee un numero como texto y lo convierte con try/catch.
-// Repite la lectura hasta que el dato sea numerico y este entre minvalido y maxvalido.
-// "etiqueta" es el mensaje que se muestra antes de cada lectura.
 int leerNumeroValidado(const std::string& etiqueta, int minvalido, int maxvalido){
 	std::string texto;
 	int valor = 0;
@@ -128,15 +148,14 @@ int leerNumeroValidado(const std::string& etiqueta, int minvalido, int maxvalido
 
 		if (todosDigitos(texto)){
 			try{
-				std::size_t posicion = 0;
 				valor = std::stoi(texto);
-				// verifica que TODO el texto se haya convertido
-				if (posicion == texto.length() && valor >= minvalido && valor <= maxvalido){
+				if (valor >= minvalido && valor <= maxvalido){
 					valido = true;
 				}
 			}
-			catch (const std::exception&){   // invalid_argument y out_of_range
+			catch (const std::exception& error){
 				valido = false;
+				registrarBitacora("ERROR | Conversion de numero | Valor: " + texto + " | No se pudo convertir (" + std::string(error.what()) + ")");
 			}
 		}
 
@@ -147,24 +166,6 @@ int leerNumeroValidado(const std::string& etiqueta, int minvalido, int maxvalido
 	return valor;
 }
 
-// Agrega una linea al final de bitacora.txt (modo agregar, nunca sobrescribe).
-// Si no se puede escribir, el programa continua sin interrumpirse.
-void registrarBitacora(const std::string& evento){
-	try{
-		std::ofstream archivo(ARCHIVO_BITACORA.c_str(), std::ios::app);
-		if (!archivo.is_open()){
-			throw std::runtime_error("No se pudo abrir " + ARCHIVO_BITACORA);
-		}
-		archivo << evento << "\n";
-		archivo.close();
-	}
-	catch (const std::exception&){
-		// Si la bitacora falla, no se interrumpe el programa.
-	}
-}
-
-// Busca un repositorio por su nombre recorriendo el arreglo.
-// Retorna la posicion donde esta, o -1 si no existe.
 int buscarRepositorio(const std::string nombreRepositorio[], int cantidadRepositorios, const std::string& nombreBuscado){
 	for (int i = 0; i < cantidadRepositorios; i = i + 1){
 		if (nombreRepositorio[i] == nombreBuscado){
@@ -174,7 +175,6 @@ int buscarRepositorio(const std::string nombreRepositorio[], int cantidadReposit
 	return -1;
 }
 
-// Convierte el tipo de cambio ('A', 'M' o 'E') en su nombre completo.
 std::string nombreTipoCambio(char tipo){
 	if (tipo == 'A'){
 		return "Agregado";
@@ -188,8 +188,6 @@ std::string nombreTipoCambio(char tipo){
 	return "Desconocido";
 }
 
-// Devuelve true si en el repositorio indicado ya hay un cambio pendiente
-// con el mismo tipo y el mismo archivo.
 bool existeCambioPendiente(const std::string archivosCambios[][MAX_CAMBIOS],
                            const char tipoCambioPendiente[][MAX_CAMBIOS],
                            const int cantidadCambiosPendientes[],
@@ -202,9 +200,6 @@ bool existeCambioPendiente(const std::string archivosCambios[][MAX_CAMBIOS],
 	return false;
 }
 
-// Opcion 1: registra un repositorio nuevo en la primera posicion libre.
-// Valida la capacidad maxima y que no exista otro con el mismo nombre.
-// El repositorio nuevo queda como repositorio activo.
 void crearRepositorio(std::string nombreRepositorio[], std::string autorRepositorio[],
                       int cantidadCommits[], int cantidadCambiosPendientes[],
                       int& cantidadRepositorios, int& repositorioActivo){
@@ -223,23 +218,20 @@ void crearRepositorio(std::string nombreRepositorio[], std::string autorReposito
 
 	std::string autor = leerTextoValido("Nombre del autor: ", 1, MAX_LONGITUDNOMBRE);
 
-	// la primera posicion libre siempre es cantidadRepositorios (no hay huecos)
 	int posicion = cantidadRepositorios;
 	nombreRepositorio[posicion] = nombre;
 	autorRepositorio[posicion] = autor;
-	cantidadCommits[posicion] = 0;              // empieza sin commits
-	cantidadCambiosPendientes[posicion] = 0;    // y sin cambios pendientes
+	cantidadCommits[posicion] = 0;
+	cantidadCambiosPendientes[posicion] = 0;
 
 	cantidadRepositorios = cantidadRepositorios + 1;
-	repositorioActivo = posicion;               // queda seleccionado
+	repositorioActivo = posicion;
 
 	registrarBitacora("CREAR_REPOSITORIO | " + nombre + " | Autor: " + autor);
 
 	std::cout << "\nRepositorio " << nombre << " creado correctamente.\n\n";
 }
 
-// Opcion 2: muestra la tabla de repositorios registrados.
-// El repositorio activo se marca con un asterisco (*).
 void listarRepositorios(const std::string nombreRepositorio[], const std::string autorRepositorio[],
                         const int cantidadCommits[], const int cantidadCambiosPendientes[],
                         int cantidadRepositorios, int repositorioActivo){
@@ -273,8 +265,6 @@ void listarRepositorios(const std::string nombreRepositorio[], const std::string
 	std::cout << "\n";
 }
 
-// Opcion 3: muestra la lista y pide el numero del repositorio con el que se quiere trabajar.
-// El valor 0 cancela la operacion sin modificar el repositorio activo.
 void seleccionarRepositorio(const std::string nombreRepositorio[], const std::string autorRepositorio[],
                             const int cantidadCommits[], const int cantidadCambiosPendientes[],
                             int cantidadRepositorios, int& repositorioActivo){
@@ -294,11 +284,10 @@ void seleccionarRepositorio(const std::string nombreRepositorio[], const std::st
 		return;
 	}
 
-	repositorioActivo = numero - 1;   // el usuario ve 1..N, el arreglo usa 0..N-1
+	repositorioActivo = numero - 1;
 	std::cout << "\nRepositorio activo: " << nombreRepositorio[repositorioActivo] << ".\n\n";
 }
 
-// Opcion 4: muestra la informacion general del repositorio activo.
 void mostrarInformacion(const std::string nombreRepositorio[], const std::string autorRepositorio[],
                         const int cantidadCommits[], const int cantidadCambiosPendientes[],
                         int repositorioActivo){
@@ -323,9 +312,6 @@ void mostrarInformacion(const std::string nombreRepositorio[], const std::string
 	}
 }
 
-// Opcion 5: registra un cambio pendiente (A, M o E) en el repositorio activo.
-// Valida capacidad maxima y que el mismo cambio (tipo + archivo) no este repetido.
-// La opcion Cancelar no modifica nada.
 void simularCambio(const std::string nombreRepositorio[], std::string archivosCambios[][MAX_CAMBIOS],
                    char tipoCambioPendiente[][MAX_CAMBIOS], int cantidadCambiosPendientes[],
                    int repositorioActivo){
@@ -369,65 +355,55 @@ void simularCambio(const std::string nombreRepositorio[], std::string archivosCa
 	std::cout << "\nCambio registrado: [" << nombreTipoCambio(tipo) << "] " << archivo << "\n\n";
 }
 
-//opcion 6 
-// aca se recorre la fila del repositorio activo solo hasta cantidad cambios pendientes-1, ya que lo que sigue es basura
-// nombretipo cambio traduce 'A', 'M' Y 'E' a su nombre, la misma funcion ya usada en simular cambio
+void mostrarCambiosPendientes(const std::string nombreRepositorio[], const std::string archivosCambios[][MAX_CAMBIOS],
+                              const char tipoCambioPendiente[][MAX_CAMBIOS],
+                              const int cantidadCambiosPendientes[], int repositorioActivo){
 
-void mostrarCambiosPendientes(const std::string nombreRepositorio[], const std::string archivosCambios[][MAX_CAMBIOS], const char tipoCambioPendiente[][MAX_CAMBIOS], 
-							  const int cantidadCambiosPendientes[], int repositorioActivo)
-{
-	
-if (cantidadCambiosPendientes[repositorioActivo]==0){
-	std::cout << "No hay cambios pendientes. \n\n";
-	return;
-}	
-	std::cout << "Cambios pendientes de " << nombreRepositorio[repositorioActivo] << ": \n";
-	
-	for (int j=0; j < cantidadCambiosPendientes[repositorioActivo]; j++){
-		std::cout << j+1 << "." << std::setw(13) << "[" << nombreTipoCambio(tipoCambioPendiente[repositorioActivo][j]) << "\n";
+	if (cantidadCambiosPendientes[repositorioActivo] == 0){
+		std::cout << "No hay cambios pendientes.\n\n";
+		return;
 	}
-	
-	std::cout << "\n";	
+
+	std::cout << "Cambios pendientes de " << nombreRepositorio[repositorioActivo] << ":\n";
+
+	for (int j = 0; j < cantidadCambiosPendientes[repositorioActivo]; j = j + 1){
+		std::cout << (j + 1) << ". [" << nombreTipoCambio(tipoCambioPendiente[repositorioActivo][j]) << "] "
+		          << archivosCambios[repositorioActivo][j] << "\n";
+	}
+	std::cout << "\n";
 }
 
-//opcion 7
+void crearCommit(const std::string nombreRepositorio[], std::string mensajesCommits[][MAX_COMMITS],
+                 std::string archivosCambios[][MAX_CAMBIOS], char tipoCambioPendiente[][MAX_CAMBIOS],
+                 int cantidadCommits[], int cantidadCambiosPendientes[], int repositorioActivo){
 
-void crearCommit(const std::string nombreRepositorio[], std::string mensajesCommits[][MAX_COMMITS], std::string archivosCambios[][MAX_CAMBIOS],
-				 char tipoCambioPendiente[][MAX_CAMBIOS], int cantidadCommits[], int cantidadCambiosPendientes[], int repositorioActivo)
-{
- 
-if (cantidadCambiosPendientes[repositorioActivo]==0){
-	std::cout << "No existen cambios para guardar.\n\n";
-	return;
-}
+	if (cantidadCambiosPendientes[repositorioActivo] == 0){
+		std::cout << "No existen cambios para guardar.\n\n";
+		return;
+	}
 
-if (cantidadCommits[repositorioActivo] >= MAX_COMMITS) {
-	std::cout << "Se alcanzó el maximo de " << MAX_COMMITS << "commits para este repositorio.\n\n";
-	return;
-}
+	if (cantidadCommits[repositorioActivo] >= MAX_COMMITS){
+		std::cout << "Se alcanzo el maximo de " << MAX_COMMITS << " commits para este repositorio.\n\n";
+		return;
+	}
 
-std::string mensaje = leerTextoValido("Ingrese el mensaje del commit: ", MIN_LONGITUDMENSAJE, MAX_LONGITUDMENSAJE); // El mensaje usa leerTextoValido con las constantes de largo, así que ya rechaza vacío, solo espacios y ;
+	std::string mensaje = leerTextoValido("Ingrese el mensaje del commit: ", MIN_LONGITUDMENSAJE, MAX_LONGITUDMENSAJE);
 
-// la columna j guarda el mensaje del commit #j+1: el commit nuevo va en la columna cantidadcommits
-// cantidadCommits define a la vez el número del commit y la columna libre de la matriz.
-int columna= cantidadCommits[repositorioActivo];
-mensajesCommits[repositorioActivo][columna]= mensaje;
-cantidadCommits[repositorioActivo] = cantidadCommits[repositorioActivo]+1;
-int numeroCommit= cantidadCommits[repositorioActivo];
+	int columna = cantidadCommits[repositorioActivo];
+	mensajesCommits[repositorioActivo][columna] = mensaje;
+	cantidadCommits[repositorioActivo] = cantidadCommits[repositorioActivo] + 1;
+	int numeroCommit = cantidadCommits[repositorioActivo];
 
-// los cambios quedan incluidos en el commit, se limpian y el contador vuelve a 0
+	int cambiosIncluidos = cantidadCambiosPendientes[repositorioActivo];
+	for (int j = 0; j < cambiosIncluidos; j = j + 1){
+		archivosCambios[repositorioActivo][j] = "";
+		tipoCambioPendiente[repositorioActivo][j] = ' ';
+	}
+	cantidadCambiosPendientes[repositorioActivo] = 0;
 
-int cambiosIncluidos= cantidadCambiosPendientes[repositorioActivo];
-for (int j=0; j < cambiosIncluidos; j++){
-	archivosCambios[repositorioActivo][j] = "";
-	tipoCambioPendiente[repositorioActivo][j] =' ';
-}
-cantidadCambiosPendientes[repositorioActivo]=0;
+	registrarBitacora("CREAR_COMMIT | " + nombreRepositorio[repositorioActivo] + " | Commit #" + std::to_string(numeroCommit));
 
-registrarBitacora("CREAR_COMMIT | " + nombreRepositorio[repositorioActivo] + " | Commit #" + std::to_string(numeroCommit));
-
-std::cout << "\nCommit #" << numeroCommit << " creado correctamente. ";
-
+	std::cout << "\nCommit #" << numeroCommit << " creado correctamente. ";
 	if (cambiosIncluidos == 1){
 		std::cout << "Se incluyo 1 cambio.\n\n";
 	}
@@ -436,44 +412,297 @@ std::cout << "\nCommit #" << numeroCommit << " creado correctamente. ";
 	}
 }
 
-int main(){
-	
+void mostrarUltimoCommit(const std::string nombreRepositorio[], const std::string autorRepositorio[],
+                         const std::string mensajesCommits[][MAX_COMMITS], const int cantidadCommits[],
+                         int repositorioActivo){
 
-int cantidadCommits[MAX_REPOSITORIOS];
-int cantidadCambiosPendientes[MAX_REPOSITORIOS];
-std::string nombreRepositorio[MAX_REPOSITORIOS];
-std::string autorRepositorio[MAX_REPOSITORIOS];
+	if (cantidadCommits[repositorioActivo] == 0){
+		std::cout << "El repositorio " << nombreRepositorio[repositorioActivo] << " aun no tiene commits.\n\n";
+		return;
+	}
 
-std::string mensajesCommits[MAX_REPOSITORIOS][MAX_COMMITS];
-std::string archivosCambios[MAX_REPOSITORIOS][MAX_CAMBIOS];
-char tipoCambioPendiente[MAX_REPOSITORIOS][MAX_CAMBIOS];
+	int ultimaColumna = cantidadCommits[repositorioActivo] - 1;
 
-int cantidadRepositorios=0;
-int repositorioActivo=-1;
-int opcion=0;
+	std::cout << "Commit #" << cantidadCommits[repositorioActivo] << "\n";
+	std::cout << "Repositorio: " << nombreRepositorio[repositorioActivo] << "\n";
+	std::cout << "Autor: " << autorRepositorio[repositorioActivo] << "\n";
+	std::cout << "Mensaje: " << mensajesCommits[repositorioActivo][ultimaColumna] << "\n";
+	std::cout << "Estado: Guardado correctamente\n\n";
+}
 
-// los arreglos de enteros y de char empiezan con basura, hay que inicializarlos
-for (int i=0; i < MAX_REPOSITORIOS; i=i+1){
-	cantidadCommits[i]=0;
-	cantidadCambiosPendientes[i]=0;
-	for (int j=0; j < MAX_CAMBIOS; j=j+1){
-		tipoCambioPendiente[i][j]=' ';
+void mostrarHistorial(const std::string nombreRepositorio[], const std::string mensajesCommits[][MAX_COMMITS],
+                      const int cantidadCommits[], int repositorioActivo){
+
+	if (cantidadCommits[repositorioActivo] == 0){
+		std::cout << "El repositorio " << nombreRepositorio[repositorioActivo] << " aun no tiene commits.\n\n";
+		return;
+	}
+
+	std::cout << "Historial de " << nombreRepositorio[repositorioActivo]
+	          << " (" << cantidadCommits[repositorioActivo];
+	if (cantidadCommits[repositorioActivo] == 1){
+		std::cout << " commit)\n";
+	}
+	else{
+		std::cout << " commits)\n";
+	}
+
+	for (int j = cantidadCommits[repositorioActivo] - 1; j >= 0; j = j - 1){
+		std::cout << "#" << (j + 1) << " - " << mensajesCommits[repositorioActivo][j] << "\n";
+	}
+	std::cout << "\n";
+}
+
+void mostrarEstadoGeneral(const std::string nombreRepositorio[], const int cantidadCommits[],
+                          const int cantidadCambiosPendientes[], int cantidadRepositorios){
+
+	if (cantidadRepositorios == 0){
+		std::cout << "No hay repositorios registrados. No se pueden mostrar estadisticas.\n\n";
+		return;
+	}
+
+	std::cout << std::left
+	          << std::setw(32) << "Repositorio"
+	          << std::setw(42) << "Estado"
+	          << "Ultimo commit\n";
+
+	int totalCommits = 0;
+	int posicionMayor = 0;
+	int reposConCambios = 0;
+
+	for (int i = 0; i < cantidadRepositorios; i = i + 1){
+
+		std::string estado = "Inicializado | ";
+		if (cantidadCambiosPendientes[i] > 0){
+			estado = estado + "Cambios pendientes (" + std::to_string(cantidadCambiosPendientes[i]) + ")";
+			reposConCambios = reposConCambios + 1;
+		}
+		else{
+			estado = estado + "Sin cambios pendientes";
+		}
+
+		std::string ultimoCommit = "Ninguno";
+		if (cantidadCommits[i] > 0){
+			ultimoCommit = "#" + std::to_string(cantidadCommits[i]);
+		}
+
+		std::cout << std::setw(32) << nombreRepositorio[i]
+		          << std::setw(42) << estado
+		          << ultimoCommit << "\n";
+
+		totalCommits = totalCommits + cantidadCommits[i];
+
+		if (cantidadCommits[i] > cantidadCommits[posicionMayor]){
+			posicionMayor = i;
+		}
+	}
+
+	double promedio = totalCommits;
+	promedio = promedio / cantidadRepositorios;
+
+	std::cout << "\nTotal de repositorios registrados: " << cantidadRepositorios << "\n";
+	std::cout << "Total de commits: " << totalCommits << "\n";
+	std::cout << "Promedio de commits por repositorio: " << std::fixed << std::setprecision(2) << promedio << "\n";
+	std::cout << "Repositorio con mas commits: " << nombreRepositorio[posicionMayor]
+	          << " (" << cantidadCommits[posicionMayor] << ")\n";
+	std::cout << "Repositorios con cambios pendientes: " << reposConCambios << "\n\n";
+}
+
+bool confirmarAccion(const std::string& pregunta){
+	std::cout << pregunta << "\n";
+	std::cout << "1. Si\n";
+	std::cout << "2. No\n";
+	int respuesta = leerNumeroValidado("Seleccione una opcion: ", 1, 2);
+	return respuesta == 1;
+}
+
+void desplazarRepositorios(std::string nombreRepositorio[], std::string autorRepositorio[],
+                           int cantidadCommits[], int cantidadCambiosPendientes[],
+                           std::string mensajesCommits[][MAX_COMMITS],
+                           std::string archivosCambios[][MAX_CAMBIOS],
+                           char tipoCambioPendiente[][MAX_CAMBIOS],
+                           int& cantidadRepositorios, int posicion){
+
+	for (int i = posicion; i < cantidadRepositorios - 1; i = i + 1){
+		nombreRepositorio[i] = nombreRepositorio[i + 1];
+		autorRepositorio[i] = autorRepositorio[i + 1];
+		cantidadCommits[i] = cantidadCommits[i + 1];
+		cantidadCambiosPendientes[i] = cantidadCambiosPendientes[i + 1];
+
+		for (int j = 0; j < MAX_COMMITS; j = j + 1){
+			mensajesCommits[i][j] = mensajesCommits[i + 1][j];
+		}
+		for (int j = 0; j < MAX_CAMBIOS; j = j + 1){
+			archivosCambios[i][j] = archivosCambios[i + 1][j];
+			tipoCambioPendiente[i][j] = tipoCambioPendiente[i + 1][j];
+		}
+	}
+
+	int ultima = cantidadRepositorios - 1;
+	nombreRepositorio[ultima] = "";
+	autorRepositorio[ultima] = "";
+	cantidadCommits[ultima] = 0;
+	cantidadCambiosPendientes[ultima] = 0;
+	for (int j = 0; j < MAX_COMMITS; j = j + 1){
+		mensajesCommits[ultima][j] = "";
+	}
+	for (int j = 0; j < MAX_CAMBIOS; j = j + 1){
+		archivosCambios[ultima][j] = "";
+		tipoCambioPendiente[ultima][j] = ' ';
+	}
+
+	cantidadRepositorios = cantidadRepositorios - 1;
+}
+
+void eliminarRepositorio(std::string nombreRepositorio[], std::string autorRepositorio[],
+                         int cantidadCommits[], int cantidadCambiosPendientes[],
+                         std::string mensajesCommits[][MAX_COMMITS],
+                         std::string archivosCambios[][MAX_CAMBIOS],
+                         char tipoCambioPendiente[][MAX_CAMBIOS],
+                         int& cantidadRepositorios, int& repositorioActivo){
+
+	if (cantidadRepositorios == 0){
+		std::cout << "No hay repositorios registrados.\n\n";
+		return;
+	}
+
+	listarRepositorios(nombreRepositorio, autorRepositorio, cantidadCommits,
+	                   cantidadCambiosPendientes, cantidadRepositorios, repositorioActivo);
+
+	int numero = leerNumeroValidado("Numero del repositorio a eliminar (0 para cancelar): ", 0, cantidadRepositorios);
+
+	if (numero == 0){
+		std::cout << "\nOperacion cancelada. No se elimino ningun repositorio.\n\n";
+		return;
+	}
+
+	int posicion = numero - 1;
+	std::string nombre = nombreRepositorio[posicion];
+
+	std::cout << "\n";
+	if (!confirmarAccion("Desea eliminar el repositorio " + nombre + "?")){
+		std::cout << "\nOperacion cancelada. El repositorio " << nombre << " no fue eliminado.\n\n";
+		return;
+	}
+
+	desplazarRepositorios(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+	                      mensajesCommits, archivosCambios, tipoCambioPendiente,
+	                      cantidadRepositorios, posicion);
+
+	repositorioActivo = -1;
+
+	registrarBitacora("ELIMINAR_REPOSITORIO | " + nombre);
+
+	std::cout << "\nRepositorio " << nombre << " eliminado correctamente.\n\n";
+}
+
+void abrirParaEscribir(std::ofstream& archivo, const std::string& nombreArchivo){
+	archivo.open(nombreArchivo);
+	if (!archivo.is_open()){
+		throw std::runtime_error("No se pudo abrir " + nombreArchivo + " para escritura.");
 	}
 }
 
-do {
-	system("cls");
-	mostrarMenuPrincipal(nombreRepositorio, repositorioActivo);	
-	opcion=leerNumeroValidado("					Seleccione una opcion: ", 1, 14);
-	
-	if (opcion >= 4 && opcion <= 9 && repositorioActivo == -1){ // del case 4 al 9 necesita un repo activo
+void escribirRepositorios(const std::string nombreRepositorio[], const std::string autorRepositorio[],
+                          int cantidadRepositorios){
+	std::ofstream archivo;
+	abrirParaEscribir(archivo, ARCHIVO_REPOSITORIOS);
+
+	archivo << "nombre;autor\n";
+	for (int i = 0; i < cantidadRepositorios; i = i + 1){
+		archivo << nombreRepositorio[i] << ";" << autorRepositorio[i] << "\n";
+	}
+	archivo.close();
+}
+
+void escribirCommits(const std::string nombreRepositorio[], const std::string mensajesCommits[][MAX_COMMITS],
+                     const int cantidadCommits[], int cantidadRepositorios){
+	std::ofstream archivo;
+	abrirParaEscribir(archivo, ARCHIVO_COMMITS);
+
+	archivo << "repositorio;numero;mensaje\n";
+	for (int i = 0; i < cantidadRepositorios; i = i + 1){
+		for (int j = 0; j < cantidadCommits[i]; j = j + 1){
+			archivo << nombreRepositorio[i] << ";" << (j + 1) << ";" << mensajesCommits[i][j] << "\n";
+		}
+	}
+	archivo.close();
+}
+
+void escribirCambios(const std::string nombreRepositorio[], const std::string archivosCambios[][MAX_CAMBIOS],
+                     const char tipoCambioPendiente[][MAX_CAMBIOS], const int cantidadCambiosPendientes[],
+                     int cantidadRepositorios){
+	std::ofstream archivo;
+	abrirParaEscribir(archivo, ARCHIVO_CAMBIOS);
+
+	archivo << "repositorio;tipo;archivo\n";
+	for (int i = 0; i < cantidadRepositorios; i = i + 1){
+		for (int j = 0; j < cantidadCambiosPendientes[i]; j = j + 1){
+			archivo << nombreRepositorio[i] << ";" << tipoCambioPendiente[i][j] << ";" << archivosCambios[i][j] << "\n";
+		}
+	}
+	archivo.close();
+}
+
+bool guardarDatos(const std::string nombreRepositorio[], const std::string autorRepositorio[],
+                  const int cantidadCommits[], const int cantidadCambiosPendientes[],
+                  const std::string mensajesCommits[][MAX_COMMITS],
+                  const std::string archivosCambios[][MAX_CAMBIOS],
+                  const char tipoCambioPendiente[][MAX_CAMBIOS],
+                  int cantidadRepositorios){
+	try{
+		escribirRepositorios(nombreRepositorio, autorRepositorio, cantidadRepositorios);
+		escribirCommits(nombreRepositorio, mensajesCommits, cantidadCommits, cantidadRepositorios);
+		escribirCambios(nombreRepositorio, archivosCambios, tipoCambioPendiente,
+		                cantidadCambiosPendientes, cantidadRepositorios);
+	}
+	catch (const std::exception& error){
+		std::cout << "Error al guardar los datos: " << error.what() << "\n";
+		std::cout << "Los datos siguen en memoria; puede intentar guardar de nuevo.\n\n";
+		registrarBitacora("ERROR | GUARDAR_DATOS | " + std::string(error.what()));
+		return false;
+	}
+
+	registrarBitacora("GUARDAR_DATOS | Datos guardados correctamente");
+	std::cout << "Datos guardados correctamente.\n\n";
+	return true;
+}
+
+int main(){
+	int cantidadCommits[MAX_REPOSITORIOS];
+	int cantidadCambiosPendientes[MAX_REPOSITORIOS];
+	std::string nombreRepositorio[MAX_REPOSITORIOS];
+	std::string autorRepositorio[MAX_REPOSITORIOS];
+
+	std::string mensajesCommits[MAX_REPOSITORIOS][MAX_COMMITS];
+	std::string archivosCambios[MAX_REPOSITORIOS][MAX_CAMBIOS];
+	char tipoCambioPendiente[MAX_REPOSITORIOS][MAX_CAMBIOS];
+
+	int cantidadRepositorios=0;
+	int repositorioActivo=-1;
+	int opcion=0;
+
+	for (int i=0; i < MAX_REPOSITORIOS; i=i+1){
+		cantidadCommits[i]=0;
+		cantidadCambiosPendientes[i]=0;
+		for (int j=0; j < MAX_CAMBIOS; j=j+1){
+			tipoCambioPendiente[i][j]=' ';
+		}
+	}
+
+	do {
+		system("cls");
+		mostrarMenuPrincipal(nombreRepositorio, repositorioActivo);
+		opcion=leerNumeroValidado("					Seleccione una opcion: ", 1, 14);
+
+		if (opcion >= 4 && opcion <= 9 && repositorioActivo == -1){
 			std::cout<<"\nDebe seleccionar un repositorio activo antes de realizar esta operacion.\n";
 			system("pause");
 			continue;
 		}
-	
+
 		switch(opcion){
-			
+
 			case 1:
 				system("cls");
 				std::cout<<"Opcion digitada: 1\nEntrando a: Crear repositorio\n\n";
@@ -518,7 +747,7 @@ do {
 				system("cls");
 				std::cout<<"Opcion digitada: 6\nEntrando a: Ver cambios pendientes\n\n";
 				mostrarCambiosPendientes(nombreRepositorio, archivosCambios, tipoCambioPendiente,
-	           							 cantidadCambiosPendientes, repositorioActivo);	
+				                         cantidadCambiosPendientes, repositorioActivo);
 				system("pause");
 				break;
 
@@ -526,42 +755,46 @@ do {
 				system("cls");
 				std::cout<<"Opcion digitada: 7\nEntrando a: Crear commit\n\n";
 				crearCommit(nombreRepositorio, mensajesCommits, archivosCambios, tipoCambioPendiente,
-	           				cantidadCommits, cantidadCambiosPendientes, repositorioActivo);	
+				            cantidadCommits, cantidadCambiosPendientes, repositorioActivo);
 				system("pause");
 				break;
 
 			case 8:
 				system("cls");
 				std::cout<<"Opcion digitada: 8\nEntrando a: Ver ultimo commit\n\n";
-
+				mostrarUltimoCommit(nombreRepositorio, autorRepositorio, mensajesCommits,
+				                    cantidadCommits, repositorioActivo);
 				system("pause");
 				break;
 
 			case 9:
 				system("cls");
 				std::cout<<"Opcion digitada: 9\nEntrando a: Ver historial de commits\n\n";
-
+				mostrarHistorial(nombreRepositorio, mensajesCommits, cantidadCommits, repositorioActivo);
 				system("pause");
 				break;
 
 			case 10:
 				system("cls");
 				std::cout<<"Opcion digitada: 10\nEntrando a: Ver estado general y estadisticas\n\n";
-
+				mostrarEstadoGeneral(nombreRepositorio, cantidadCommits, cantidadCambiosPendientes, cantidadRepositorios);
 				system("pause");
 				break;
 
 			case 11:
 				system("cls");
 				std::cout<<"Opcion digitada: 11\nEntrando a: Eliminar repositorio\n\n";
-
+				eliminarRepositorio(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+				                    mensajesCommits, archivosCambios, tipoCambioPendiente,
+				                    cantidadRepositorios, repositorioActivo);
 				system("pause");
 				break;
 
 			case 12:
 				system("cls");
 				std::cout<<"Opcion digitada: 12\nEntrando a: Guardar datos\n\n";
-
+				guardarDatos(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+				             mensajesCommits, archivosCambios, tipoCambioPendiente, cantidadRepositorios);
 				system("pause");
 				break;
 
