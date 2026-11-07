@@ -667,7 +667,46 @@ bool guardarDatos(const std::string nombreRepositorio[], const std::string autor
 	std::cout << "Datos guardados correctamente.\n\n";
 	return true;
 }
+	void mostrarBitacora(){
+	std::ifstream archivo(ARCHIVO_BITACORA);
 
+	if (!archivo.is_open()){
+		std::cout << "La bitacora esta vacia.\n\n";
+		return;
+	}
+
+	std::string linea;
+	bool hayLineas = false;
+
+	while (std::getline(archivo, linea)){
+		std::cout << linea << "\n";
+		hayLineas = true;
+	}
+	archivo.close();
+
+	if (!hayLineas){
+		std::cout << "La bitacora esta vacia.\n";
+	}
+	std::cout << "\n";
+}
+
+bool confirmarSalida(const std::string nombreRepositorio[], const std::string autorRepositorio[],
+                     const int cantidadCommits[], const int cantidadCambiosPendientes[],
+                     const std::string mensajesCommits[][MAX_COMMITS],
+                     const std::string archivosCambios[][MAX_CAMBIOS],
+                     const char tipoCambioPendiente[][MAX_CAMBIOS],
+                     int cantidadRepositorios){
+
+	bool guardado = guardarDatos(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+	                             mensajesCommits, archivosCambios, tipoCambioPendiente, cantidadRepositorios);
+
+	if (guardado){
+		return true;
+	}
+
+	std::cout << "ADVERTENCIA: los datos no se pudieron guardar. Si sale ahora se perderan los cambios de esta sesion.\n\n";
+	return confirmarAccion("Desea salir de todas formas?");
+}
 int main(){
 	int cantidadCommits[MAX_REPOSITORIOS];
 	int cantidadCambiosPendientes[MAX_REPOSITORIOS];
@@ -801,14 +840,21 @@ int main(){
 			case 13:
 				system("cls");
 				std::cout<<"Opcion digitada: 13\nEntrando a: Ver bitacora\n\n";
-
+				mostrarBitacora();
 				system("pause");
 				break;
 
 			case 14:
 				system("cls");
 				std::cout<<"Saliendo....\n";
-
+				if (confirmarSalida(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+				               		mensajesCommits, archivosCambios, tipoCambioPendiente, cantidadRepositorios)){
+					std::cout<<"Saliendo....\n\n";
+				}
+				else{
+					opcion = 0;   
+				}
+				system("pause");
 				break;
 		}
 
