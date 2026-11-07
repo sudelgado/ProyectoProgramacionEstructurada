@@ -1,4 +1,8 @@
-
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <stdexcept>
+#include <fstream>
 
 const int MAX_REPOSITORIOS=10;
 const int MAX_COMMITS=50; 
