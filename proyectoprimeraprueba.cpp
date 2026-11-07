@@ -1,8 +1,4 @@
-#include <iostream>
-#include <string>
-#include <iomanip>
-#include <stdexcept>
-#include <fstream>
+
 
 const int MAX_REPOSITORIOS=10;
 const int MAX_COMMITS=50; 
@@ -129,7 +125,7 @@ int leerNumeroValidado(const std::string& etiqueta, int minvalido, int maxvalido
 		if (todosDigitos(texto)){
 			try{
 				std::size_t posicion = 0;
-				valor = std::stoi(texto, &posicion);
+				valor = std::stoi(texto);
 				// verifica que TODO el texto se haya convertido
 				if (posicion == texto.length() && valor >= minvalido && valor <= maxvalido){
 					valido = true;
@@ -369,6 +365,73 @@ void simularCambio(const std::string nombreRepositorio[], std::string archivosCa
 	std::cout << "\nCambio registrado: [" << nombreTipoCambio(tipo) << "] " << archivo << "\n\n";
 }
 
+//opcion 6 
+// aca se recorre la fila del repositorio activo solo hasta cantidad cambios pendientes-1, ya que lo que sigue es basura
+// nombretipo cambio traduce 'A', 'M' Y 'E' a su nombre, la misma funcion ya usada en simular cambio
+
+void mostrarCambiosPendientes(const std::string nombreRepositorio[], const std::string archivosCambios[][MAX_CAMBIOS], const char tipoCambioPendiente[][MAX_CAMBIOS], 
+							  const int cantidadCambiosPendientes[], int repositorioActivo)
+{
+	
+if (cantidadCambiosPendientes[repositorioActivo]==0){
+	std::cout << "No hay cambios pendientes. \n\n";
+	return;
+}	
+	std::cout << "Cambios pendientes de " << nombreRepositorio[repositorioActivo] << ": \n";
+	
+	for (int j=0; j < cantidadCambiosPendientes[repositorioActivo]; j++){
+		std::cout << j+1 << "." << std::setw(13) << "[" << nombreTipoCambio(tipoCambioPendiente[repositorioActivo][j]) << "\n";
+	}
+	
+	std::cout << "\n";	
+}
+
+//opcion 7
+
+void crearCommit(const std::string nombreRepositorio[], std::string mensajesCommits[][MAX_COMMITS], std::string archivosCambios[][MAX_CAMBIOS],
+				 char tipoCambioPendiente[][MAX_CAMBIOS], int cantidadCommits[], int cantidadCambiosPendientes[], int repositorioActivo)
+{
+ 
+if (cantidadCambiosPendientes[repositorioActivo]==0){
+	std::cout << "No existen cambios para guardar.\n\n";
+	return;
+}
+
+if (cantidadCommits[repositorioActivo] >= MAX_COMMITS) {
+	std::cout << "Se alcanzó el maximo de " << MAX_COMMITS << "commits para este repositorio.\n\n";
+	return;
+}
+
+std::string mensaje = leerTextoValido("Ingrese el mensaje del commit: ", MIN_LONGITUDMENSAJE, MAX_LONGITUDMENSAJE); // El mensaje usa leerTextoValido con las constantes de largo, así que ya rechaza vacío, solo espacios y ;
+
+// la columna j guarda el mensaje del commit #j+1: el commit nuevo va en la columna cantidadcommits
+// cantidadCommits define a la vez el número del commit y la columna libre de la matriz.
+int columna= cantidadCommits[repositorioActivo];
+mensajesCommits[repositorioActivo][columna]= mensaje;
+cantidadCommits[repositorioActivo] = cantidadCommits[repositorioActivo]+1;
+int numeroCommit= cantidadCommits[repositorioActivo];
+
+// los cambios quedan incluidos en el commit, se limpian y el contador vuelve a 0
+
+int cambiosIncluidos= cantidadCambiosPendientes[repositorioActivo];
+for (int j=0; j < cambiosIncluidos; j++){
+	archivosCambios[repositorioActivo][j] = "";
+	tipoCambioPendiente[repositorioActivo][j] =' ';
+}
+cantidadCambiosPendientes[repositorioActivo]=0;
+
+registrarBitacora("CREAR_COMMIT | " + nombreRepositorio[repositorioActivo] + " | Commit #" + std::to_string(numeroCommit));
+
+std::cout << "\nCommit #" << numeroCommit << " creado correctamente. ";
+
+	if (cambiosIncluidos == 1){
+		std::cout << "Se incluyo 1 cambio.\n\n";
+	}
+	else{
+		std::cout << "Se incluyeron " << cambiosIncluidos << " cambios.\n\n";
+	}
+}
+
 int main(){
 	
 
@@ -450,14 +513,16 @@ do {
 			case 6:
 				system("cls");
 				std::cout<<"Opcion digitada: 6\nEntrando a: Ver cambios pendientes\n\n";
-
+				mostrarCambiosPendientes(nombreRepositorio, archivosCambios, tipoCambioPendiente,
+	           							 cantidadCambiosPendientes, repositorioActivo);	
 				system("pause");
 				break;
 
 			case 7:
 				system("cls");
 				std::cout<<"Opcion digitada: 7\nEntrando a: Crear commit\n\n";
-
+				crearCommit(nombreRepositorio, mensajesCommits, archivosCambios, tipoCambioPendiente,
+	           				cantidadCommits, cantidadCambiosPendientes, repositorioActivo);	
 				system("pause");
 				break;
 
