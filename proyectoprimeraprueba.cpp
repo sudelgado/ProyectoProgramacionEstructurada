@@ -963,7 +963,6 @@ int main(){
 
 			case 14:
 				system("cls");
-				std::cout<<"Saliendo....\n";
 				// Guarda automaticamente. Si falla y el usuario NO quiere salir,
 				// opcion = 0 evita que termine el do-while y se vuelve al menu.
 				if (confirmarSalida(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
