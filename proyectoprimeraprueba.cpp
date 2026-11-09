@@ -58,7 +58,6 @@ void mostrarSubmenuCambios(){
 }
 
 
-
 // Agrega una linea al final de bitacora.txt (std::ios::app = modo agregar, nunca sobrescribe).
 // Si no se puede escribir, el catch queda vacio a proposito para que el programa continue.
 void registrarBitacora(std::string evento){
@@ -73,7 +72,6 @@ void registrarBitacora(std::string evento){
 	catch (std::runtime_error){
 	}
 }
-
 
 
 // Devuelve true si el texto esta vacio o solo tiene espacios/tabs.
@@ -182,7 +180,6 @@ int leerNumeroValidado(std::string etiqueta, int minvalido, int maxvalido){
 }
 
 
-
 // Busqueda lineal por nombre. Retorna la posicion o -1 si no existe.
 int buscarRepositorio(std::string nombreRepositorio[], int cantidadRepositorios, std::string nombreBuscado){
 	for (int i = 0; i < cantidadRepositorios; i++){
@@ -219,7 +216,6 @@ bool existeCambioPendiente(std::string archivosCambios[][MAX_CAMBIOS],
 	}
 	return false;
 }
-
 
 
 // Opcion 1: registra un repositorio nuevo (valida capacidad y nombre repetido).
@@ -714,20 +710,6 @@ void lanzarErrorLinea(std::string nombreArchivo, int numeroLinea, std::string pr
 	throw std::runtime_error(nombreArchivo + " | Linea " + std::to_string(numeroLinea) + ": " + problema);
 }
 
-// Si la linea termina en '\r' (archivos editados en Windows) se lo quita y la retorna.
-// Copia la linea caracter por caracter sin incluir ese ultimo '\r'.
-std::string quitarRetornoCarro(std::string linea){
-	int largo = linea.length();
-	if (largo > 0 && linea[largo - 1] == '\r'){
-		largo = largo - 1;   // el ultimo caracter no se copia
-	}
-	std::string resultado = "";
-	for (int i = 0; i < largo; i++){
-		resultado = resultado + linea[i];
-	}
-	return resultado;
-}
-
 // Separa una linea por ';' y guarda hasta maxCampos campos. Retorna cuantos campos
 // tiene en total, para detectar lineas con una cantidad incorrecta de campos.
 int dividirCampos(std::string linea, std::string campos[], int maxCampos){
@@ -760,7 +742,7 @@ void validarEncabezado(bool seLeyo, std::string linea, std::string encabezadoEsp
 	if (!seLeyo){
 		lanzarErrorLinea(nombreArchivo, 1, "el archivo esta vacio o no se pudo leer (falta el encabezado)");
 	}
-	if (quitarRetornoCarro(linea) != encabezadoEsperado){
+	if (linea != encabezadoEsperado){
 		lanzarErrorLinea(nombreArchivo, 1, "encabezado incorrecto, se esperaba: " + encabezadoEsperado);
 	}
 }
@@ -783,7 +765,6 @@ int cargarRepositorios(std::string nombreRepositorio[], std::string autorReposit
 
 	while (std::getline(archivo, linea)){
 		numeroLinea++;
-		linea = quitarRetornoCarro(linea);
 		if (linea == ""){
 			continue;   // se saltan las lineas vacias
 		}
@@ -837,7 +818,6 @@ bool cargarCommits(std::string nombreRepositorio[], int cantidadRepositorios,
 
 	while (std::getline(archivo, linea)){
 		numeroLinea++;
-		linea = quitarRetornoCarro(linea);
 		if (linea == ""){
 			continue;   // se saltan las lineas vacias
 		}
@@ -898,7 +878,6 @@ bool cargarCambios(std::string nombreRepositorio[], int cantidadRepositorios,
 
 	while (std::getline(archivo, linea)){
 		numeroLinea++;
-		linea = quitarRetornoCarro(linea);
 		if (linea == ""){
 			continue;   // se saltan las lineas vacias
 		}
