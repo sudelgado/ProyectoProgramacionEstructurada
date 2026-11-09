@@ -99,21 +99,6 @@ bool contienePuntoYComa(std::string texto){
 	return false;
 }
 
-// Cuenta los caracteres del texto sin contar los espacios/tabs del inicio y del final.
-// Sirve para que un mensaje como "   hola   " no pase el minimo de longitud solo por los espacios.
-int largoSinEspaciosExtremos(std::string texto){
-	int inicio = 0;
-	int fin = texto.length() - 1;
-
-	while (inicio <= fin && (texto[inicio] == ' ' || texto[inicio] == '\t')){
-		inicio++;
-	}
-	while (fin >= inicio && (texto[fin] == ' ' || texto[fin] == '\t')){
-		fin = fin - 1;
-	}
-	return fin - inicio + 1;
-}
-
 // Revisa un texto: no vacio, sin ';' y con largo entre minLongitud y maxLongitud.
 // Retorna "" si es valido o el mensaje del error. Se usa con el teclado y con los CSV.
 std::string errorDeTexto(std::string texto, int minLongitud, int maxLongitud){
@@ -125,12 +110,8 @@ std::string errorDeTexto(std::string texto, int minLongitud, int maxLongitud){
 	if (contienePuntoYComa(texto)){
 		return "El texto no puede contener el caracter ';'.";
 	}
-	if (largo > maxLongitud){
+	if (largo < minLongitud || largo > maxLongitud){
 		return "El texto debe tener entre " + std::to_string(minLongitud) + " y " + std::to_string(maxLongitud) + " caracteres.";
-	}
-	if (largoSinEspaciosExtremos(texto) < minLongitud){
-		return "El texto debe tener entre " + std::to_string(minLongitud) + " y " + std::to_string(maxLongitud)
-		       + " caracteres (los espacios al inicio o al final no cuentan).";
 	}
 	return "";
 }
