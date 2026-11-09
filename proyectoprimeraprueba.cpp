@@ -175,7 +175,11 @@ int convertirEntero(std::string texto){
 	try{
 		return std::stoi(texto);
 	}
-	catch (std::logic_error error){   // out_of_range e invalid_argument son tipos de logic_error
+	catch (std::out_of_range error){       // el numero es demasiado grande para un int
+		registrarBitacora("ERROR | Conversion de numero | Valor: " + texto + " | No se pudo convertir (" + std::string(error.what()) + ")");
+		return -1;
+	}
+	catch (std::invalid_argument error){   // el texto no es un numero
 		registrarBitacora("ERROR | Conversion de numero | Valor: " + texto + " | No se pudo convertir (" + std::string(error.what()) + ")");
 		return -1;
 	}
@@ -730,12 +734,17 @@ void lanzarErrorLinea(std::string nombreArchivo, int numeroLinea, std::string pr
 }
 
 // Si la linea termina en '\r' (archivos editados en Windows) se lo quita y la retorna.
+// Copia la linea caracter por caracter sin incluir ese ultimo '\r'.
 std::string quitarRetornoCarro(std::string linea){
 	int largo = linea.length();
 	if (largo > 0 && linea[largo - 1] == '\r'){
-		return linea.substr(0, largo - 1);
+		largo = largo - 1;   // el ultimo caracter no se copia
 	}
-	return linea;
+	std::string resultado = "";
+	for (int i = 0; i < largo; i++){
+		resultado = resultado + linea[i];
+	}
+	return resultado;
 }
 
 // Separa una linea por ';' y guarda hasta maxCampos campos. Retorna cuantos campos
@@ -772,13 +781,6 @@ void validarEncabezado(bool seLeyo, std::string linea, std::string encabezadoEsp
 	}
 	if (quitarRetornoCarro(linea) != encabezadoEsperado){
 		lanzarErrorLinea(nombreArchivo, 1, "encabezado incorrecto, se esperaba: " + encabezadoEsperado);
-	}
-}
-
-// Si el archivo fallo a la mitad de la lectura, lanza una excepcion.
-void verificarLectura(bool huboError, std::string nombreArchivo){
-	if (huboError){
-		throw std::runtime_error(nombreArchivo + " | Error de lectura del archivo.");
 	}
 }
 
@@ -834,7 +836,6 @@ int cargarRepositorios(std::string nombreRepositorio[], std::string autorReposit
 		autorRepositorio[cantidadRepositorios] = campos[1];
 		cantidadRepositorios++;
 	}
-	verificarLectura(archivo.bad(), ARCHIVO_REPOSITORIOS);
 	return cantidadRepositorios;
 }
 
@@ -895,7 +896,6 @@ bool cargarCommits(std::string nombreRepositorio[], int cantidadRepositorios,
 		mensajesCommits[posicion][cantidadCommits[posicion]] = campos[2];
 		cantidadCommits[posicion]++;
 	}
-	verificarLectura(archivo.bad(), ARCHIVO_COMMITS);
 	return true;
 }
 
@@ -962,7 +962,6 @@ bool cargarCambios(std::string nombreRepositorio[], int cantidadRepositorios,
 		archivosCambios[posicion][columna] = campos[2];
 		cantidadCambiosPendientes[posicion]++;
 	}
-	verificarLectura(archivo.bad(), ARCHIVO_CAMBIOS);
 	return true;
 }
 
