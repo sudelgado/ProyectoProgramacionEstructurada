@@ -19,6 +19,11 @@ const std::string ARCHIVO_REPOSITORIOS = "repositorios.csv";
 const std::string ARCHIVO_COMMITS = "commits.csv";
 const std::string ARCHIVO_CAMBIOS = "cambios.csv";
 
+// Primera linea (encabezado) de cada CSV. Se usa al guardar y al validar la carga.
+const std::string ENCABEZADO_REPOSITORIOS = "nombre;autor";
+const std::string ENCABEZADO_COMMITS = "repositorio;numero;mensaje";
+const std::string ENCABEZADO_CAMBIOS = "repositorio;tipo;archivo";
+
 
 // Muestra el menu principal e indica cual es el repositorio activo.
 // -1 significa que no hay ningun repositorio seleccionado.
@@ -115,10 +120,33 @@ int largoSinEspaciosExtremos(const std::string& texto){
 	return fin - inicio + 1;
 }
 
-// Lee un texto y lo vuelve a pedir hasta que sea valido:
+// Revisa un texto con TODAS las reglas de texto del enunciado:
 //  - no puede estar vacio ni tener solo espacios
 //  - no puede contener ';'
 //  - su largo debe estar entre minLongitud y maxLongitud
+// Retorna "" si el texto es valido, o el mensaje del problema encontrado.
+// Se usa tanto al leer del teclado (leerTextoValido) como al leer de los archivos CSV,
+// asi la validacion se escribe una sola vez.
+std::string errorDeTexto(const std::string& texto, int minLongitud, int maxLongitud){
+	int largo = texto.length();
+
+	if (soloEspacios(texto)){
+		return "El texto no puede estar vacio ni tener solo espacios.";
+	}
+	if (contienePuntoYComa(texto)){
+		return "El texto no puede contener el caracter ';'.";
+	}
+	if (largo > maxLongitud){
+		return "El texto debe tener entre " + std::to_string(minLongitud) + " y " + std::to_string(maxLongitud) + " caracteres.";
+	}
+	if (largoSinEspaciosExtremos(texto) < minLongitud){
+		return "El texto debe tener entre " + std::to_string(minLongitud) + " y " + std::to_string(maxLongitud)
+		       + " caracteres (los espacios al inicio o al final no cuentan).";
+	}
+	return "";
+}
+
+// Lee un texto del teclado y lo vuelve a pedir hasta que sea valido (ver errorDeTexto).
 // Se usa para TODOS los textos: repositorio, autor, archivo y mensaje del commit.
 std::string leerTextoValido(const std::string& etiqueta, int minLongitud, int maxLongitud){
 	std::string texto;
@@ -127,23 +155,13 @@ std::string leerTextoValido(const std::string& etiqueta, int minLongitud, int ma
 	while (!valido){
 		std::cout << etiqueta;
 		std::getline(std::cin, texto);
-		int largo = texto.length();
 
-		if (soloEspacios(texto)){
-			std::cout << "El texto no puede estar vacio ni tener solo espacios.\n";
-		}
-		else if (contienePuntoYComa(texto)){
-			std::cout << "El texto no puede contener el caracter ';'.\n";
-		}
-		else if (largo > maxLongitud){
-			std::cout << "El texto debe tener entre " << minLongitud << " y " << maxLongitud << " caracteres.\n";
-		}
-		else if (largoSinEspaciosExtremos(texto) < minLongitud){
-			std::cout << "El texto debe tener entre " << minLongitud << " y " << maxLongitud
-			          << " caracteres (los espacios al inicio o al final no cuentan).\n";
-		}
-		else {
+		std::string error = errorDeTexto(texto, minLongitud, maxLongitud);
+		if (error == ""){
 			valido = true;
+		}
+		else{
+			std::cout << error << "\n";
 		}
 	}
 	return texto;
@@ -164,10 +182,32 @@ bool todosDigitos(const std::string& texto){
 	return true;
 }
 
-// Lee un numero como TEXTO y lo convierte con try/catch (como pide el enunciado).
+// Convierte un texto a entero con try/catch. Retorna true si la conversion fue exitosa.
+// Se usa para las opciones del teclado Y para los numeros de commit leidos de los archivos.
+//  - todosDigitos descarta letras, signos, espacios y vacio.
+//  - stoi puede lanzar invalid_argument u out_of_range (ej: un numero gigante): se capturan.
+//  - se verifica que TODO el texto se haya convertido (posicion == largo).
+bool convertirEntero(const std::string& texto, int& valor){
+	if (!todosDigitos(texto)){
+		return false;
+	}
+	try{
+		std::size_t posicion = 0;
+		int convertido = std::stoi(texto, &posicion);
+		if (posicion != texto.length()){
+			return false;
+		}
+		valor = convertido;
+		return true;
+	}
+	catch (const std::exception& error){
+		registrarBitacora("ERROR | Conversion de numero | Valor: " + texto + " | No se pudo convertir (" + std::string(error.what()) + ")");
+		return false;
+	}
+}
+
+// Lee un numero como TEXTO y lo convierte (ver convertirEntero).
 // Repite la lectura hasta que sea numerico y este entre minvalido y maxvalido.
-// Cualquier error de stoi (invalid_argument u out_of_range, por ejemplo un numero
-// gigante) se captura, se registra en la bitacora y NO cierra el programa.
 int leerNumeroValidado(const std::string& etiqueta, int minvalido, int maxvalido){
 	std::string texto;
 	int valor = 0;
@@ -177,17 +217,8 @@ int leerNumeroValidado(const std::string& etiqueta, int minvalido, int maxvalido
 		std::cout << etiqueta;
 		std::getline(std::cin, texto);
 
-		if (todosDigitos(texto)){
-			try{
-				valor = std::stoi(texto);
-				if (valor >= minvalido && valor <= maxvalido){
-					valido = true;
-				}
-			}
-			catch (const std::exception& error){
-				valido = false;
-				registrarBitacora("ERROR | Conversion de numero | Valor: " + texto + " | No se pudo convertir (" + std::string(error.what()) + ")");
-			}
+		if (convertirEntero(texto, valor) && valor >= minvalido && valor <= maxvalido){
+			valido = true;
 		}
 
 		if (!valido){
@@ -541,9 +572,9 @@ void mostrarEstadoGeneral(const std::string nombreRepositorio[], const int canti
 	          << std::setw(42) << "Estado"
 	          << "Ultimo commit\n";
 
-	int totalCommits = 0;        
-	int posicionMayor = 0;       
-	int reposConCambios = 0;     
+	int totalCommits = 0;        // acumulador
+	int posicionMayor = 0;       // posicion del repositorio con mas commits
+	int reposConCambios = 0;     // contador
 
 	for (int i = 0; i < cantidadRepositorios; i = i + 1){
 
@@ -685,6 +716,8 @@ void eliminarRepositorio(std::string nombreRepositorio[], std::string autorRepos
 }
 
 
+// ===================== GUARDAR DATOS =====================
+
 // Abre un archivo para escritura. Si no se puede, LANZA una excepcion (throw)
 // con un mensaje descriptivo; la captura la funcion que coordina el guardado (guardarDatos).
 // Al abrir sin std::ios::app el contenido anterior se sobrescribe, como pide el enunciado.
@@ -701,7 +734,7 @@ void escribirRepositorios(const std::string nombreRepositorio[], const std::stri
 	std::ofstream archivo;
 	abrirParaEscribir(archivo, ARCHIVO_REPOSITORIOS);
 
-	archivo << "nombre;autor\n";
+	archivo << ENCABEZADO_REPOSITORIOS << "\n";
 	for (int i = 0; i < cantidadRepositorios; i = i + 1){
 		archivo << nombreRepositorio[i] << ";" << autorRepositorio[i] << "\n";
 	}
@@ -715,7 +748,7 @@ void escribirCommits(const std::string nombreRepositorio[], const std::string me
 	std::ofstream archivo;
 	abrirParaEscribir(archivo, ARCHIVO_COMMITS);
 
-	archivo << "repositorio;numero;mensaje\n";
+	archivo << ENCABEZADO_COMMITS << "\n";
 	for (int i = 0; i < cantidadRepositorios; i = i + 1){
 		for (int j = 0; j < cantidadCommits[i]; j = j + 1){
 			archivo << nombreRepositorio[i] << ";" << (j + 1) << ";" << mensajesCommits[i][j] << "\n";
@@ -731,7 +764,7 @@ void escribirCambios(const std::string nombreRepositorio[], const std::string ar
 	std::ofstream archivo;
 	abrirParaEscribir(archivo, ARCHIVO_CAMBIOS);
 
-	archivo << "repositorio;tipo;archivo\n";
+	archivo << ENCABEZADO_CAMBIOS << "\n";
 	for (int i = 0; i < cantidadRepositorios; i = i + 1){
 		for (int j = 0; j < cantidadCambiosPendientes[i]; j = j + 1){
 			archivo << nombreRepositorio[i] << ";" << tipoCambioPendiente[i][j] << ";" << archivosCambios[i][j] << "\n";
@@ -767,6 +800,343 @@ bool guardarDatos(const std::string nombreRepositorio[], const std::string autor
 	std::cout << "Datos guardados correctamente.\n\n";
 	return true;
 }
+
+
+// ===================== CARGAR DATOS =====================
+
+// Deja TODOS los arreglos y matrices en su estado inicial (vacios) y la cantidad en 0.
+// Se usa al iniciar el programa y cuando la carga falla (para no conservar datos parciales).
+// Los int y char sin inicializar tienen basura, por eso se ponen en 0 / ' '.
+void reiniciarDatos(std::string nombreRepositorio[], std::string autorRepositorio[],
+                    int cantidadCommits[], int cantidadCambiosPendientes[],
+                    std::string mensajesCommits[][MAX_COMMITS],
+                    std::string archivosCambios[][MAX_CAMBIOS],
+                    char tipoCambioPendiente[][MAX_CAMBIOS],
+                    int& cantidadRepositorios){
+
+	for (int i = 0; i < MAX_REPOSITORIOS; i = i + 1){
+		nombreRepositorio[i] = "";
+		autorRepositorio[i] = "";
+		cantidadCommits[i] = 0;
+		cantidadCambiosPendientes[i] = 0;
+		for (int j = 0; j < MAX_COMMITS; j = j + 1){
+			mensajesCommits[i][j] = "";
+		}
+		for (int j = 0; j < MAX_CAMBIOS; j = j + 1){
+			archivosCambios[i][j] = "";
+			tipoCambioPendiente[i][j] = ' ';
+		}
+	}
+	cantidadRepositorios = 0;
+}
+
+// Arma el mensaje de error de un archivo con el formato: "archivo | Linea N: problema".
+// Asi todos los errores de carga indican el archivo y la linea, como pide el enunciado.
+std::string mensajeLinea(const std::string& nombreArchivo, int numeroLinea, const std::string& problema){
+	return nombreArchivo + " | Linea " + std::to_string(numeroLinea) + ": " + problema;
+}
+
+// Si la linea termina en '\r' (archivos editados en Windows) se lo quita.
+void quitarRetornoCarro(std::string& linea){
+	int largo = linea.length();
+	if (largo > 0 && linea[largo - 1] == '\r'){
+		linea = linea.substr(0, largo - 1);
+	}
+}
+
+// Separa una linea por ';' y guarda los primeros maxCampos campos en el arreglo "campos".
+// RETORNA cuantos campos tiene la linea en total (aunque sean mas que maxCampos),
+// para poder detectar lineas con una cantidad incorrecta de campos.
+int dividirCampos(const std::string& linea, std::string campos[], int maxCampos){
+	int cantidad = 0;
+	std::string actual = "";
+	int largo = linea.length();
+
+	for (int i = 0; i < largo; i = i + 1){
+		if (linea[i] == ';'){
+			if (cantidad < maxCampos){
+				campos[cantidad] = actual;
+			}
+			cantidad = cantidad + 1;
+			actual = "";
+		}
+		else{
+			actual = actual + linea[i];
+		}
+	}
+	if (cantidad < maxCampos){
+		campos[cantidad] = actual;
+	}
+	cantidad = cantidad + 1;
+	return cantidad;
+}
+
+// Abre un CSV para lectura y valida su encabezado (primera linea).
+//  - Si el archivo NO existe retorna false: en la primera ejecucion no es un error.
+//  - Si existe pero esta vacio o tiene un encabezado distinto, LANZA una excepcion.
+// numeroLinea queda en 1 (la linea del encabezado ya fue leida).
+bool abrirParaLectura(std::ifstream& archivo, const std::string& nombreArchivo,
+                      const std::string& encabezadoEsperado, int& numeroLinea){
+	archivo.open(nombreArchivo);
+	if (!archivo.is_open()){
+		return false;
+	}
+
+	std::string linea;
+	if (!std::getline(archivo, linea)){
+		throw std::runtime_error(mensajeLinea(nombreArchivo, 1, "el archivo esta vacio o no se pudo leer (falta el encabezado)"));
+	}
+	numeroLinea = 1;
+	quitarRetornoCarro(linea);
+
+	if (linea != encabezadoEsperado){
+		throw std::runtime_error(mensajeLinea(nombreArchivo, 1, "encabezado incorrecto, se esperaba: " + encabezadoEsperado));
+	}
+	return true;
+}
+
+// Lee el siguiente registro del archivo (salta las lineas completamente vacias).
+// Va aumentando numeroLinea para poder reportar en que linea esta el problema.
+// Retorna false cuando se llega al final del archivo.
+// Si el archivo falla a la mitad de la lectura, lanza una excepcion.
+bool leerSiguienteRegistro(std::ifstream& archivo, const std::string& nombreArchivo,
+                           std::string& linea, int& numeroLinea){
+	while (std::getline(archivo, linea)){
+		numeroLinea = numeroLinea + 1;
+		quitarRetornoCarro(linea);
+		if (linea.length() > 0){
+			return true;
+		}
+	}
+	if (archivo.bad()){
+		throw std::runtime_error(nombreArchivo + " | Error de lectura del archivo.");
+	}
+	return false;
+}
+
+// Carga repositorios.csv (nombre;autor). Se carga PRIMERO porque commits y cambios
+// hacen referencia a los repositorios por su nombre.
+// Valida: cantidad de campos, textos validos, repositorio duplicado y capacidad maxima.
+// Retorna false si el archivo no existe. Ante cualquier dato malo lanza una excepcion.
+bool cargarRepositorios(std::string nombreRepositorio[], std::string autorRepositorio[],
+                        int& cantidadRepositorios){
+	std::ifstream archivo;
+	int numeroLinea = 0;
+
+	if (!abrirParaLectura(archivo, ARCHIVO_REPOSITORIOS, ENCABEZADO_REPOSITORIOS, numeroLinea)){
+		return false;
+	}
+
+	std::string linea;
+	std::string campos[2];
+
+	while (leerSiguienteRegistro(archivo, ARCHIVO_REPOSITORIOS, linea, numeroLinea)){
+
+		int cantidadCampos = dividirCampos(linea, campos, 2);
+		if (cantidadCampos != 2){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_REPOSITORIOS, numeroLinea,
+			      "se esperaban 2 campos y se encontraron " + std::to_string(cantidadCampos)));
+		}
+
+		std::string errorNombre = errorDeTexto(campos[0], 1, MAX_LONGITUDNOMBRE);
+		if (errorNombre != ""){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_REPOSITORIOS, numeroLinea,
+			      "nombre de repositorio invalido. " + errorNombre));
+		}
+
+		std::string errorAutor = errorDeTexto(campos[1], 1, MAX_LONGITUDNOMBRE);
+		if (errorAutor != ""){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_REPOSITORIOS, numeroLinea,
+			      "autor invalido. " + errorAutor));
+		}
+
+		if (buscarRepositorio(nombreRepositorio, cantidadRepositorios, campos[0]) != -1){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_REPOSITORIOS, numeroLinea,
+			      "el repositorio " + campos[0] + " esta duplicado"));
+		}
+
+		if (cantidadRepositorios >= MAX_REPOSITORIOS){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_REPOSITORIOS, numeroLinea,
+			      "se supera la capacidad maxima de " + std::to_string(MAX_REPOSITORIOS) + " repositorios"));
+		}
+
+		nombreRepositorio[cantidadRepositorios] = campos[0];
+		autorRepositorio[cantidadRepositorios] = campos[1];
+		cantidadRepositorios = cantidadRepositorios + 1;
+	}
+	return true;
+}
+
+// Carga commits.csv (repositorio;numero;mensaje).
+// Valida: cantidad de campos, repositorio existente, numero convertible (try/catch),
+// capacidad maxima, numeros CONSECUTIVOS (1, 2, 3...) y mensaje valido (10 a 60 caracteres).
+// La cantidad de commits de cada repositorio NO viene en el archivo: se calcula contando registros.
+bool cargarCommits(const std::string nombreRepositorio[], int cantidadRepositorios,
+                   std::string mensajesCommits[][MAX_COMMITS], int cantidadCommits[]){
+	std::ifstream archivo;
+	int numeroLinea = 0;
+
+	if (!abrirParaLectura(archivo, ARCHIVO_COMMITS, ENCABEZADO_COMMITS, numeroLinea)){
+		return false;
+	}
+
+	std::string linea;
+	std::string campos[3];
+
+	while (leerSiguienteRegistro(archivo, ARCHIVO_COMMITS, linea, numeroLinea)){
+
+		int cantidadCampos = dividirCampos(linea, campos, 3);
+		if (cantidadCampos != 3){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_COMMITS, numeroLinea,
+			      "se esperaban 3 campos y se encontraron " + std::to_string(cantidadCampos)));
+		}
+
+		int posicion = buscarRepositorio(nombreRepositorio, cantidadRepositorios, campos[0]);
+		if (posicion == -1){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_COMMITS, numeroLinea,
+			      "el repositorio " + campos[0] + " no existe"));
+		}
+
+		int numeroCommit = 0;
+		if (!convertirEntero(campos[1], numeroCommit)){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_COMMITS, numeroLinea,
+			      "el numero de commit '" + campos[1] + "' no es un numero valido"));
+		}
+
+		if (cantidadCommits[posicion] >= MAX_COMMITS){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_COMMITS, numeroLinea,
+			      "el repositorio " + campos[0] + " supera el maximo de " + std::to_string(MAX_COMMITS) + " commits"));
+		}
+
+		int numeroEsperado = cantidadCommits[posicion] + 1;
+		if (numeroCommit != numeroEsperado){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_COMMITS, numeroLinea,
+			      "el numero de commit " + campos[1] + " no es consecutivo (se esperaba " + std::to_string(numeroEsperado) + ")"));
+		}
+
+		std::string errorMensaje = errorDeTexto(campos[2], MIN_LONGITUDMENSAJE, MAX_LONGITUDMENSAJE);
+		if (errorMensaje != ""){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_COMMITS, numeroLinea,
+			      "mensaje de commit invalido. " + errorMensaje));
+		}
+
+		mensajesCommits[posicion][cantidadCommits[posicion]] = campos[2];
+		cantidadCommits[posicion] = cantidadCommits[posicion] + 1;
+	}
+	return true;
+}
+
+// Carga cambios.csv (repositorio;tipo;archivo).
+// Valida: cantidad de campos, repositorio existente, tipo A/M/E, archivo valido,
+// cambio repetido (mismo tipo y archivo) y capacidad maxima de cambios pendientes.
+// La cantidad de cambios pendientes tampoco se guarda: se calcula contando registros.
+bool cargarCambios(const std::string nombreRepositorio[], int cantidadRepositorios,
+                   std::string archivosCambios[][MAX_CAMBIOS], char tipoCambioPendiente[][MAX_CAMBIOS],
+                   int cantidadCambiosPendientes[]){
+	std::ifstream archivo;
+	int numeroLinea = 0;
+
+	if (!abrirParaLectura(archivo, ARCHIVO_CAMBIOS, ENCABEZADO_CAMBIOS, numeroLinea)){
+		return false;
+	}
+
+	std::string linea;
+	std::string campos[3];
+
+	while (leerSiguienteRegistro(archivo, ARCHIVO_CAMBIOS, linea, numeroLinea)){
+
+		int cantidadCampos = dividirCampos(linea, campos, 3);
+		if (cantidadCampos != 3){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_CAMBIOS, numeroLinea,
+			      "se esperaban 3 campos y se encontraron " + std::to_string(cantidadCampos)));
+		}
+
+		int posicion = buscarRepositorio(nombreRepositorio, cantidadRepositorios, campos[0]);
+		if (posicion == -1){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_CAMBIOS, numeroLinea,
+			      "el repositorio " + campos[0] + " no existe"));
+		}
+
+		// El tipo debe ser exactamente un caracter: A, M o E.
+		bool tipoValido = (campos[1].length() == 1) &&
+		                  (campos[1][0] == 'A' || campos[1][0] == 'M' || campos[1][0] == 'E');
+		if (!tipoValido){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_CAMBIOS, numeroLinea,
+			      "tipo de cambio '" + campos[1] + "' no valido (debe ser A, M o E)"));
+		}
+		char tipo = campos[1][0];
+
+		std::string errorArchivo = errorDeTexto(campos[2], 1, MAX_LONGITUDNOMBRE);
+		if (errorArchivo != ""){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_CAMBIOS, numeroLinea,
+			      "nombre de archivo invalido. " + errorArchivo));
+		}
+
+		if (existeCambioPendiente(archivosCambios, tipoCambioPendiente, cantidadCambiosPendientes,
+		                          posicion, tipo, campos[2])){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_CAMBIOS, numeroLinea,
+			      "el cambio " + campos[1] + " " + campos[2] + " esta repetido en el repositorio " + campos[0]));
+		}
+
+		if (cantidadCambiosPendientes[posicion] >= MAX_CAMBIOS){
+			throw std::runtime_error(mensajeLinea(ARCHIVO_CAMBIOS, numeroLinea,
+			      "el repositorio " + campos[0] + " supera el maximo de " + std::to_string(MAX_CAMBIOS) + " cambios pendientes"));
+		}
+
+		int columna = cantidadCambiosPendientes[posicion];
+		tipoCambioPendiente[posicion][columna] = tipo;
+		archivosCambios[posicion][columna] = campos[2];
+		cantidadCambiosPendientes[posicion] = cantidadCambiosPendientes[posicion] + 1;
+	}
+	return true;
+}
+
+// Funcion que COORDINA la carga al iniciar (se llama antes de mostrar el menu).
+// Orden: repositorios, commits y cambios (los dos ultimos usan el nombre del repositorio).
+//  - Si ningun archivo existe (primera ejecucion) NO es un error: inicia vacio y lo informa.
+//  - Si todo carga bien, muestra cuantos repositorios se recuperaron.
+//  - Si ocurre CUALQUIER error, se captura aqui, NO se conservan datos parciales
+//    (se vacian todos los arreglos), se informa el problema y se advierte que
+//    guardar sobrescribe los archivos existentes. El programa sigue funcionando.
+void cargarDatos(std::string nombreRepositorio[], std::string autorRepositorio[],
+                 int cantidadCommits[], int cantidadCambiosPendientes[],
+                 std::string mensajesCommits[][MAX_COMMITS],
+                 std::string archivosCambios[][MAX_CAMBIOS],
+                 char tipoCambioPendiente[][MAX_CAMBIOS],
+                 int& cantidadRepositorios){
+
+	reiniciarDatos(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+	               mensajesCommits, archivosCambios, tipoCambioPendiente, cantidadRepositorios);
+
+	try{
+		bool existenRepositorios = cargarRepositorios(nombreRepositorio, autorRepositorio, cantidadRepositorios);
+		bool existenCommits = cargarCommits(nombreRepositorio, cantidadRepositorios, mensajesCommits, cantidadCommits);
+		bool existenCambios = cargarCambios(nombreRepositorio, cantidadRepositorios, archivosCambios,
+		                                    tipoCambioPendiente, cantidadCambiosPendientes);
+
+		if (!existenRepositorios && !existenCommits && !existenCambios){
+			std::cout << "No se encontraron archivos de datos (primera ejecucion). El sistema inicia vacio.\n\n";
+			registrarBitacora("CARGAR_DATOS | No se encontraron archivos. El sistema inicia vacio");
+		}
+		else{
+			std::cout << "Datos cargados correctamente. Repositorios recuperados: " << cantidadRepositorios << "\n\n";
+			registrarBitacora("CARGAR_DATOS | Repositorios recuperados: " + std::to_string(cantidadRepositorios));
+		}
+	}
+	catch (const std::exception& error){
+		// Sin datos parciales: se vacia todo lo que alcanzo a cargarse.
+		reiniciarDatos(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+		               mensajesCommits, archivosCambios, tipoCambioPendiente, cantidadRepositorios);
+
+		std::cout << "Error al cargar los datos: " << error.what() << "\n";
+		std::cout << "El sistema inicia vacio.\n";
+		std::cout << "ADVERTENCIA: si guarda los datos (opcion 12 o al salir), se sobrescribiran los archivos existentes.\n\n";
+
+		registrarBitacora("ERROR | " + std::string(error.what()));
+		registrarBitacora("CARGAR_DATOS | La carga fallo. El sistema inicia vacio");
+	}
+}
+
 
 // Opcion 13: lee bitacora.txt linea por linea y la muestra.
 // Si el archivo no existe o esta vacio, muestra "La bitacora esta vacia."
@@ -830,18 +1200,14 @@ int main(){
 	char tipoCambioPendiente[MAX_REPOSITORIOS][MAX_CAMBIOS];
 
 	int cantidadRepositorios=0;   // cuantos repositorios hay registrados
-	int repositorioActivo=-1;     // posicion del repositorio activo (-1 = ninguno)
+	int repositorioActivo=-1;     // posicion del repositorio activo (-1 = ninguno, nunca se guarda en archivos)
 	int opcion=0;
 
-	// Los int y char sin inicializar tienen basura, por eso se ponen en 0 / ' '.
-	// (los std::string ya empiezan vacios)
-	for (int i=0; i < MAX_REPOSITORIOS; i=i+1){
-		cantidadCommits[i]=0;
-		cantidadCambiosPendientes[i]=0;
-		for (int j=0; j < MAX_CAMBIOS; j=j+1){
-			tipoCambioPendiente[i][j]=' ';
-		}
-	}
+	// Antes de mostrar el menu se cargan los archivos.
+	// cargarDatos tambien deja todos los arreglos inicializados (vacios).
+	cargarDatos(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
+	            mensajesCommits, archivosCambios, tipoCambioPendiente, cantidadRepositorios);
+	system("pause");
 
 	// Menu repetitivo: solo termina cuando opcion vale 14 (Salir).
 	do {
@@ -963,7 +1329,6 @@ int main(){
 
 			case 14:
 				system("cls");
-				std::cout<<"Opcion digitada: 14\nEntrando a: Salir\n\n";
 				// Guarda automaticamente. Si falla y el usuario NO quiere salir,
 				// opcion = 0 evita que termine el do-while y se vuelve al menu.
 				if (confirmarSalida(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
