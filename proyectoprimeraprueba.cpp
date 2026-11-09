@@ -118,16 +118,40 @@ int convertirEntero(std::string texto){ // Convierte un texto a entero con try/c
 }
 
 int leerNumeroValidado(std::string etiqueta, int minvalido, int maxvalido){
-	std::string texto;
-	while (true){
-		std::cout << etiqueta;
-		std::getline(std::cin, texto);
-		int valor = convertirEntero(texto);   
-		if (valor != -1 && valor >= minvalido && valor <= maxvalido){
-			return valor;
-		}
-		std::cout<<"Opcion no valida. Escriba solo un numero entre "<<minvalido<<" y "<<maxvalido<<" (sin espacios ni letras).\n";
-	}
+    std::string texto;
+
+    while (true){
+        std::cout << etiqueta;
+        std::getline(std::cin, texto);
+
+        int largo = texto.length();
+        int inicio = 0;
+        int fin = largo - 1;
+
+        while (inicio < largo &&
+              (texto[inicio] == ' ' || texto[inicio] == '\t')){
+            inicio++;
+        }
+
+        while (fin >= inicio &&
+              (texto[fin] == ' ' || texto[fin] == '\t')){
+            fin--;
+        }
+
+        std::string numero = "";
+
+        for (int i = inicio; i <= fin; i++){
+            numero += texto[i];
+        }
+
+        int valor = convertirEntero(numero);
+
+        if (valor != -1 && valor >= minvalido && valor <= maxvalido){
+            return valor;
+        }
+
+        std::cout << "Numero invalido. Intente nuevamente.\n";
+    }
 }
 
 bool confirmarAccion(std::string pregunta){
@@ -508,7 +532,7 @@ bool eliminarRepositorio(std::string nombreRepositorio[], std::string autorRepos
 	return true;
 }
 
-// ---------- Guardar datos en archivos ----------
+// Guardar datos en archivos 
 
 void verificarApertura(bool abierto, std::string nombreArchivo){
 	if (!abierto){
