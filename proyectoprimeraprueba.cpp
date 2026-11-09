@@ -16,40 +16,15 @@ const std::string ARCHIVO_REPOSITORIOS = "repositorios.csv";
 const std::string ARCHIVO_COMMITS = "commits.csv";
 const std::string ARCHIVO_CAMBIOS = "cambios.csv";
 
-// Encabezados de CVV. Se usarán al guardar y al validar la carga.
 const std::string ENCABEZADO_REPOSITORIOS = "nombre;autor";
 const std::string ENCABEZADO_COMMITS = "repositorio;numero;mensaje";
 const std::string ENCABEZADO_CAMBIOS = "repositorio;tipo;archivo";
 
 
-void mostrarMenuPrincipal(std::string nombreRepositorio[], int repositorioActivo){
-	std::cout<<"\n        				 << MINI GIT >>\n";
-	std::cout << "					<<Repositorio activo: "
-	          << (repositorioActivo == -1 ? "Ninguno" : nombreRepositorio[repositorioActivo]) << ">>\n\n";
+// BLOQUE 1: FUNCIONES DE VALIDACION
+// Leen los datos que escribe el usuario y revisan que sean correctos: textos (vacios, ";", largo), numeros (con try/catch), repositorios y cambios repetidos
+// registrarBitacora va primero porque convertirEntero la usa para anotar los errores
 
-	std::cout<<"					<<1. Crear Repositorio>>\n";
-	std::cout<<"					<<2. Listar repositorios>>\n";
-	std::cout<<"					<<3. Seleccionar repositorio activo>>\n";
-	std::cout<<"					<<4. Ver informacion del repositorio activo>>\n";
-	std::cout<<"					<<5. Simular cambios>>\n";
-	std::cout<<"					<<6. Ver cambios pendientes>>\n";
-	std::cout<<"					<<7. Crear commit>>\n";
-	std::cout<<"					<<8. Ver ultimo commit>>\n";
-	std::cout<<"					<<9. Ver historial de commits>>\n";
-	std::cout<<"					<<10. Ver estado general y estadisticas>>\n";
-	std::cout<<"					<<11. Eliminar repositorio>>\n";
-	std::cout<<"					<<12. Guardar datos>>\n";
-	std::cout<<"					<<13. Ver bitacora>>\n";
-	std::cout<<"					<<14. Salir>>\n\n";
-}
-
-void mostrarSubmenuCambios(){
-	std::cout<<"        << Seleccione una de las siguientes opciones: >>\n\n";
-	std::cout<<"          1. Agregar Archivo\n";
-	std::cout<<"          2. Modificar Archivo\n";
-	std::cout<<"          3. Eliminar Archivo\n";
-	std::cout<<"          4. Cancelar\n\n";
-}
 
 void registrarBitacora(std::string evento){
 	try{
@@ -60,7 +35,7 @@ void registrarBitacora(std::string evento){
 		archivo << evento << "\n";
 		archivo.close();
 	}
-	catch (std::runtime_error){ // El catch queda vacio si no puede escribir a proposito, así el programa continua
+	catch (std::runtime_error&){ // El catch queda vacio si no puede escribir a proposito, así el programa continua
 	}
 }
 
@@ -94,7 +69,7 @@ std::string errorDeTexto(std::string texto, int minLongitud, int maxLongitud){
 		return "El texto no puede contener el caracter ';'.";
 	}
 	if (largo < minLongitud || largo > maxLongitud){
-		return "El texto debe tener entre " + std::to_string(minLongitud) + " y " + std::to_string(maxLongitud) + " caracteres.";
+		return "El texto debe tener entre " + std::to_string(minLongitud)+" y " +std::to_string(maxLongitud) + " caracteres.";
 	}
 	return "";
 }
@@ -112,7 +87,7 @@ std::string leerTextoValido(std::string etiqueta, int minLongitud, int maxLongit
 	}
 }
 
-bool todosDigitos(std::string texto){// Rechaza 12abc, -9, 4.4 y el texto vacio antes de intentar convertir.
+bool todosDigitos(std::string texto){// Rechaza 12abc, -9, 4.4 y el texto vacio antes de intentar convertir
 	int largo = texto.length();
 	if (largo == 0){
 		return false;
@@ -141,6 +116,7 @@ int convertirEntero(std::string texto){ // Convierte un texto a entero con try/c
 		return -1;
 	}
 }
+
 int leerNumeroValidado(std::string etiqueta, int minvalido, int maxvalido){
 	std::string texto;
 	while (true){
@@ -154,6 +130,14 @@ int leerNumeroValidado(std::string etiqueta, int minvalido, int maxvalido){
 	}
 }
 
+bool confirmarAccion(std::string pregunta){
+	std::cout << pregunta << "\n";
+	std::cout << "1. Si\n";
+	std::cout << "2. No\n";
+	int respuesta = leerNumeroValidado("Seleccione una opcion: ", 1, 2);
+	return respuesta == 1;
+}
+
 int buscarRepositorio(std::string nombreRepositorio[], int cantidadRepositorios, std::string nombreBuscado){
 	for (int i = 0; i < cantidadRepositorios; i++){
 		if (nombreRepositorio[i] == nombreBuscado){
@@ -161,6 +145,55 @@ int buscarRepositorio(std::string nombreRepositorio[], int cantidadRepositorios,
 		}
 	}
 	return -1;
+}
+
+bool existeCambioPendiente(std::string archivosCambios[][MAX_CAMBIOS], char tipoCambioPendiente[][MAX_CAMBIOS], int cantidadCambiosPendientes[], int repositorio, char tipo, std::string archivo){
+	for (int j = 0; j < cantidadCambiosPendientes[repositorio]; j++){
+		if (tipoCambioPendiente[repositorio][j] == tipo && archivosCambios[repositorio][j] == archivo){ 
+			return true;
+		}
+	}
+	return false;
+}
+
+// BLOQUE 2: FUNCIONES DE CARGA, DATOS Y SISTEMA
+// Menus, opciones del programa (repositorios, cambios y commits)
+// guardar y cargar los archivos CSV, y la bitacora
+
+// Menus y pantallas
+
+void mostrarMenuPrincipal(std::string nombreRepositorio[], int repositorioActivo){
+	std::cout<<"\n        				 << MINI GIT >>\n";
+	std::cout << "					<<Repositorio activo: "
+	          << (repositorioActivo == -1 ? "Ninguno" : nombreRepositorio[repositorioActivo]) << ">>\n\n";
+
+	std::cout<<"					<<1. Crear Repositorio>>\n";
+	std::cout<<"					<<2. Listar repositorios>>\n";
+	std::cout<<"					<<3. Seleccionar repositorio activo>>\n";
+	std::cout<<"					<<4. Ver informacion del repositorio activo>>\n";
+	std::cout<<"					<<5. Simular cambios>>\n";
+	std::cout<<"					<<6. Ver cambios pendientes>>\n";
+	std::cout<<"					<<7. Crear commit>>\n";
+	std::cout<<"					<<8. Ver ultimo commit>>\n";
+	std::cout<<"					<<9. Ver historial de commits>>\n";
+	std::cout<<"					<<10. Ver estado general y estadisticas>>\n";
+	std::cout<<"					<<11. Eliminar repositorio>>\n";
+	std::cout<<"					<<12. Guardar datos>>\n";
+	std::cout<<"					<<13. Ver bitacora>>\n";
+	std::cout<<"					<<14. Salir>>\n\n";
+}
+
+void mostrarSubmenuCambios(){
+	std::cout<<"        << Seleccione una de las siguientes opciones: >>\n\n";
+	std::cout<<"          1. Agregar Archivo\n";
+	std::cout<<"          2. Modificar Archivo\n";
+	std::cout<<"          3. Eliminar Archivo\n";
+	std::cout<<"          4. Cancelar\n\n";
+}
+
+void mostrarEncabezado(int opcion, std::string titulo){
+	system("cls");
+	std::cout << "Opcion digitada: " << opcion << "\nEntrando a: " << titulo << "\n\n";
 }
 
 std::string nombreTipoCambio(char tipo){ // Convierte lo guardado en la matriz ('A', 'M', 'E') en texto para mostrar al usuario
@@ -176,14 +209,7 @@ std::string nombreTipoCambio(char tipo){ // Convierte lo guardado en la matriz (
 	return "Desconocido";
 }
 
-bool existeCambioPendiente(std::string archivosCambios[][MAX_CAMBIOS], char tipoCambioPendiente[][MAX_CAMBIOS], int cantidadCambiosPendientes[], int repositorio, char tipo, std::string archivo){
-	for (int j = 0; j < cantidadCambiosPendientes[repositorio]; j++){
-		if (tipoCambioPendiente[repositorio][j] == tipo && archivosCambios[repositorio][j] == archivo){ 
-			return true;
-		}
-	}
-	return false;
-}
+// Opciones del menu: repositorios, cambios y commits
 
 int crearRepositorio(std::string nombreRepositorio[], std::string autorRepositorio[], int cantidadCommits[], int cantidadCambiosPendientes[], int cantidadRepositorios){ // Opcion 1
 
@@ -212,7 +238,7 @@ int crearRepositorio(std::string nombreRepositorio[], std::string autorRepositor
 	std::cout << "\nRepositorio " << nombre << " creado correctamente.\n\n";
 	return posicion;
 }
- 
+
 void listarRepositorios(std::string nombreRepositorio[], std::string autorRepositorio[], int cantidadCommits[], int cantidadCambiosPendientes[], int cantidadRepositorios, int repositorioActivo){ // muestra la tabla de repositorios.
 
 	if (cantidadRepositorios == 0){
@@ -245,7 +271,6 @@ int pedirNumeroRepositorio(std::string nombreRepositorio[], std::string autorRep
 	}
 	return numero - 1;   
 }
-
 
 int seleccionarRepositorio(std::string nombreRepositorio[], std::string autorRepositorio[], int cantidadCommits[], int cantidadCambiosPendientes[], int cantidadRepositorios, int repositorioActivo){
 	int posicion = pedirNumeroRepositorio(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes, cantidadRepositorios, repositorioActivo, "Numero del repositorio (0 para cancelar): ", "Operacion cancelada. El repositorio activo no cambio.");
@@ -426,14 +451,6 @@ void mostrarEstadoGeneral(std::string nombreRepositorio[], int cantidadCommits[]
 	std::cout << "Repositorios con cambios pendientes: " << reposConCambios << "\n\n";
 }
 
-bool confirmarAccion(std::string pregunta){
-	std::cout << pregunta << "\n";
-	std::cout << "1. Si\n";
-	std::cout << "2. No\n";
-	int respuesta = leerNumeroValidado("Seleccione una opcion: ", 1, 2);
-	return respuesta == 1;
-}
-
 void limpiarRepositorio(std::string nombreRepositorio[], std::string autorRepositorio[], int cantidadCommits[], int cantidadCambiosPendientes[], std::string mensajesCommits[][MAX_COMMITS], std::string archivosCambios[][MAX_CAMBIOS], char tipoCambioPendiente[][MAX_CAMBIOS], int posicion){ // Vacia todos los datos de la fila "posicion" en los arreglos y matrices 
 	nombreRepositorio[posicion] = "";
 	autorRepositorio[posicion] = "";
@@ -491,12 +508,13 @@ bool eliminarRepositorio(std::string nombreRepositorio[], std::string autorRepos
 	return true;
 }
 
+// ---------- Guardar datos en archivos ----------
+
 void verificarApertura(bool abierto, std::string nombreArchivo){
 	if (!abierto){
 		throw std::runtime_error("No se pudo abrir " + nombreArchivo + " para escritura.");
 	}
 }
-
 
 void escribirRepositorios(std::string nombreRepositorio[], std::string autorRepositorio[], int cantidadRepositorios){
 	
@@ -556,6 +574,8 @@ bool guardarDatos(std::string nombreRepositorio[], std::string autorRepositorio[
 	std::cout << "Datos guardados correctamente.\n\n";
 	return true;
 }
+
+//  Cargar datos desde archivos 
 
 void reiniciarDatos(std::string nombreRepositorio[], std::string autorRepositorio[], int cantidadCommits[], int cantidadCambiosPendientes[], std::string mensajesCommits[][MAX_COMMITS], std::string archivosCambios[][MAX_CAMBIOS], char tipoCambioPendiente[][MAX_CAMBIOS]){
 
@@ -799,6 +819,8 @@ int cargarDatos(std::string nombreRepositorio[], std::string autorRepositorio[],
 	return cantidadRepositorios;
 }
 
+// Bitacora y salida 
+
 void mostrarBitacora(){
 	std::ifstream archivo(ARCHIVO_BITACORA);
 
@@ -834,10 +856,8 @@ bool confirmarSalida(std::string nombreRepositorio[], std::string autorRepositor
 	return confirmarAccion("Desea salir de todas formas?");
 }
 
-void mostrarEncabezado(int opcion, std::string titulo){
-	system("cls");
-	std::cout << "Opcion digitada: " << opcion << "\nEntrando a: " << titulo << "\n\n";
-}
+// BLOQUE 3: CODIGO PRINCIPAL
+// Declara los arreglos, carga los datos al iniciar y muestra el menu hasta que el usuario elige salir
 
 int main(){
 
@@ -882,8 +902,7 @@ int main(){
 				
 			case 2:
 				mostrarEncabezado(2, "Listar repositorios");
-				listarRepositorios(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,
-				                   cantidadRepositorios, repositorioActivo);
+				listarRepositorios(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes,cantidadRepositorios, repositorioActivo);
 				break;
 				
 			case 3:
