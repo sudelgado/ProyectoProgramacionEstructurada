@@ -132,11 +132,11 @@ int convertirEntero(std::string texto){ // Convierte un texto a entero con try/c
 	try{
 		return std::stoi(texto);
 	}
-	catch (std::out_of_range error){       // el numero es demasiado grande para un int
+	catch (std::out_of_range& error){       // el numero es demasiado grande para un int
 		registrarBitacora("ERROR | Conversion de numero | Valor: " + texto + " | No se pudo convertir (" + std::string(error.what()) + ")");
 		return -1;
 	}
-	catch (std::invalid_argument error){   // el texto no es un numero
+	catch (std::invalid_argument& error){   // el texto no es un numero
 		registrarBitacora("ERROR | Conversion de numero | Valor: " + texto + " | No se pudo convertir (" + std::string(error.what()) + ")");
 		return -1;
 	}
@@ -545,7 +545,7 @@ bool guardarDatos(std::string nombreRepositorio[], std::string autorRepositorio[
 		escribirCommits(nombreRepositorio, mensajesCommits, cantidadCommits, cantidadRepositorios);
 		escribirCambios(nombreRepositorio, archivosCambios, tipoCambioPendiente, cantidadCambiosPendientes, cantidadRepositorios);
 	}
-	catch (std::runtime_error error){
+	catch (std::runtime_error& error){
 		std::cout << "Error al guardar los datos: " << error.what() << "\n";
 		std::cout << "Los datos siguen en memoria; puede intentar guardar de nuevo.\n\n";
 		registrarBitacora("ERROR | GUARDAR_DATOS | " + std::string(error.what()));
@@ -784,7 +784,7 @@ int cargarDatos(std::string nombreRepositorio[], std::string autorRepositorio[],
 			registrarBitacora("CARGAR_DATOS | Repositorios recuperados: " + std::to_string(cantidadRepositorios));
 		}
 	}
-	catch (std::runtime_error error){
+	catch (std::runtime_error& error){
 
 		reiniciarDatos(nombreRepositorio, autorRepositorio, cantidadCommits, cantidadCambiosPendientes, mensajesCommits, archivosCambios, tipoCambioPendiente);
 		cantidadRepositorios = 0;
